@@ -174,4 +174,23 @@ public class WorkspaceController {
         // Return the response with 201 Created status
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    // Find short urls
+    @GetMapping(value = {"/{workspaceId}/shorten-url", "/{workspaceId}/shorten-url/"})
+    public ResponseEntity<SuccessApiResponse<List<ShortUrlDto>>> findAllUrl(@PathVariable UUID workspaceId) {
+
+        List<ShortUrlDto> shortUrlDtoList = shortUrlService.getAllUrl(workspaceId);
+
+        // Set up response
+        SuccessApiResponse<List<ShortUrlDto>> response = new SuccessApiResponse<>();
+        response.setStatus_code(HttpStatus.OK.value());
+        response.setStatus_text(HttpStatus.OK.name());
+        response.setSuccess(true);
+        response.setStatus("Shorten URL Found");
+        response.setMessage("Shorten URL found successfully");
+        response.setData(shortUrlDtoList);
+
+        // Return the response with 200 Created status
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 }
