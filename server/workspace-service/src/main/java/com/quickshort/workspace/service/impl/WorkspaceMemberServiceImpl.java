@@ -186,4 +186,71 @@ public class WorkspaceMemberServiceImpl implements WorkspaceMemberService {
             throw new InternalServerErrorException("Internal Server Error", "Internal Server Error", errors);
         }
     }
+
+
+    // get all the members under a workspace
+    @Override
+    public List<WorkspaceMemberDto> getAllMembers(UUID workspaceId) {
+        try {
+            // Find the workspace
+            Optional<Workspace> existingWorkspace = workspaceRepository.findById(workspaceId);
+
+
+            // If workspace is not present with the id, then throw error
+            if (existingWorkspace.isEmpty()) {
+                List<FieldError> errors = new ArrayList<>();
+                errors.add(new FieldError("No workspace found", "workspace_id"));
+                throw new BadRequestException("Invalid Data Provided", "No workspace found for the id", errors);
+            }
+
+
+            List<FieldError> errors = new ArrayList<>();
+
+
+            // Check user associated with the workspace or not
+            User currUser = getUserFromAuthentication();
+            Workspace workspace = existingWorkspace.get();
+            Optional<WorkspaceMember> member = workspaceMemberRepository.findByUserIdAndWorkspaceId(currUser, workspace);
+            // If the current user not associated with the workspace, then throw error
+            if (member.isEmpty()) {
+                errors.add(new FieldError("User not associated with the workspace"));
+                throw new BadRequestException("Invalid Data Provided", "User not associated with the workspace", errors);
+            }
+
+
+            // If the current user associated with the workspace but not an OWNER, then do not allow to update workspace details
+            if (member.get().getMemberType() != MemberType.OWNER) {
+                errors.add(new FieldError("User is not an OWNER of the Workspace"));
+                throw new BadRequestException("Invalid Data Provided", "User is not an OWNER of the Workspace", errors);
+            }
+
+
+            // If OWNER is not verified, then not allow to update
+            if (member.get().getStatus() != MemberStatus.VERIFIED) {
+                errors.add(new FieldError("User is not a VERIFIED OWNER of the Workspace"));
+                throw new BadRequestException("Invalid Data Provided", "User is not a VERIFIED OWNER of the Workspace", errors);
+            }
+
+
+            List<WorkspaceMember> workspaceMembers = workspaceMemberRepository.findByWorkspaceId(workspace);
+
+            return workspaceMembers.stream()
+                    .map(workspaceMember -> new WorkspaceMemberDto(
+                            workspaceMember.getId(),
+                            workspaceMember.getWorkspaceId(),
+                            workspaceMember.getUserId(),
+                            workspaceMember.getMemberType(),
+                            workspaceMember.getStatus()
+                    ))
+                    .collect(Collectors.toList());
+
+        } catch (BadRequestException | ForbiddenException exception) {
+            throw exception;
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error during while finding short url under a workspace", e);
+            List<FieldError> errors = new ArrayList<>();
+            errors.add(new FieldError("Internal Server Error"));
+            throw new InternalServerErrorException("Internal Server Error", "Internal Server Error", errors);
+        }
+    }
 }

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Repository;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -175,6 +176,7 @@ public class WorkspaceController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+
     // Find short urls
     @GetMapping(value = {"/{workspaceId}/shorten-url", "/{workspaceId}/shorten-url/"})
     public ResponseEntity<SuccessApiResponse<List<ShortUrlDto>>> findAllUrl(@PathVariable UUID workspaceId) {
@@ -195,6 +197,7 @@ public class WorkspaceController {
     }
 
 
+    // Apply to join as a member
     @PostMapping(value = {"/{workspaceId}/join-as-member", "/{workspaceId}/join-as-member/"})
     public ResponseEntity<SuccessApiResponse<WorkspaceMemberDto>> joinWorkspaceAsMember(@PathVariable UUID workspaceId) {
 
@@ -209,6 +212,44 @@ public class WorkspaceController {
         response.setStatus("Applied To Be A Member");
         response.setMessage("Successfully applied to be a member");
         response.setData(joinedMember);
+
+        // Return the response with 200 Created status
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+
+    @GetMapping(value = {"/{workspaceId}/members", "/{workspaceId}/members/"})
+    public ResponseEntity<SuccessApiResponse<List<WorkspaceMemberDto>>> getAllMembers(@PathVariable UUID workspaceId) {
+        List<WorkspaceMemberDto> members = workspaceMemberService.getAllMembers(workspaceId);
+
+        // Set up response
+        SuccessApiResponse<List<WorkspaceMemberDto>> response = new SuccessApiResponse<>();
+        response.setStatus_code(HttpStatus.OK.value());
+        response.setStatus_text(HttpStatus.OK.name());
+        response.setSuccess(true);
+        response.setStatus("Applied To Be A Member");
+        response.setMessage("Successfully applied to be a member");
+        response.setData(members);
+
+        // Return the response with 200 Created status
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+
+    // Verify member
+    @PostMapping(value = {"/{workspaceId}/verify-member/{workspaceMemberId}", "/{workspaceId}/verify-member/{workspaceMemberId}/"})
+    public ResponseEntity<SuccessApiResponse<List<WorkspaceMemberDto>>> verifyMember(@PathVariable UUID workspaceId, @PathVariable UUID workspaceMemberId) {
+        // Join as Member
+//        WorkspaceMemberDto joinedMember = workspaceMemberService.joinAsMember(workspaceId);
+
+        // Set up response
+        SuccessApiResponse<List<WorkspaceMemberDto>> response = new SuccessApiResponse<>();
+        response.setStatus_code(HttpStatus.OK.value());
+        response.setStatus_text(HttpStatus.OK.name());
+        response.setSuccess(true);
+        response.setStatus("Applied To Be A Member");
+        response.setMessage("Successfully applied to be a member");
+//        response.setData(joinedMember);
 
         // Return the response with 200 Created status
         return ResponseEntity.status(HttpStatus.OK).body(response);

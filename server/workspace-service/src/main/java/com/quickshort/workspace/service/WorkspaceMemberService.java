@@ -13,4 +13,6 @@ public interface WorkspaceMemberService {
     List<WorkspaceMemberDto> allWorkspaceWhereUserIsMember();
 
     WorkspaceMemberDto joinAsMember(UUID workspaceId);
+
+    List<WorkspaceMemberDto> getAllMembers(UUID workspaceId);
 }
