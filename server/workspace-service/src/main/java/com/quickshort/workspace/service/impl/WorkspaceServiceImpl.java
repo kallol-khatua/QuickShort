@@ -18,6 +18,7 @@ import com.quickshort.workspace.service.WorkspaceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -43,6 +44,24 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     @Autowired
     private WorkspaceMemberRepository workspaceMemberRepository;
 
+    @Value("${spring.workspace.free.link-creation-limit}")
+    private int freeWorkspaceLinkCreationLimit;
+
+    @Value("${spring.workspace.free.member-limit}")
+    private int freeWorkspaceMemberLimit;
+
+    @Value("${spring.workspace.pro.link-creation-limit}")
+    private int proWorkspaceLinkCreationLimit;
+
+    @Value("${spring.workspace.pro.member-limit}")
+    private int proWorkspaceMemberLimit;
+
+    @Value("${spring.workspace.business.link-creation-limit}")
+    private int businessWorkspaceLinkCreationLimit;
+
+    @Value("${spring.workspace.business.member-limit}")
+    private int businessWorkspaceMemberLimit;
+
     private User getUserFromAuthentication() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -59,10 +78,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
             if (workspaceDto.getName() == null || workspaceDto.getName().isEmpty()) {
                 errors.add(new FieldError("Workspace name is required", "name"));
             }
-            if (workspaceDto.getType() == null || workspaceDto.getType().name().isEmpty()) {
-                errors.add(new FieldError("Workspace type is required", "type"));
-            }
-
             if (!errors.isEmpty()) {
                 throw new BadRequestException("Invalid Data Provided", "Please fill all the details", errors);
             }
@@ -73,8 +88,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
             // Create new workspace
             Workspace newWorkspace = WorkspaceMapper.mapToWorkspace(workspaceDto);
             // Free workspace
-            newWorkspace.setLinkCreationLimitPerMonth(25);
+            newWorkspace.setType(WorkspaceType.FREE);
+            newWorkspace.setLinkCreationLimitPerMonth(freeWorkspaceLinkCreationLimit);
             newWorkspace.setCreatedLinksThisMonth(0);
+            newWorkspace.setMemberLimit(freeWorkspaceMemberLimit);
+            newWorkspace.setMemberCount(1);
             newWorkspace.setCreatedBy(currUser);
             Workspace savedWorkspace = workspaceRepository.save(newWorkspace);
 
@@ -156,11 +174,15 @@ public class WorkspaceServiceImpl implements WorkspaceService {
             workspace.setName(workspaceDto.getName());
             workspace.setType(workspaceDto.getType());
             if (workspaceDto.getType() == WorkspaceType.BUSINESS) {
-                workspace.setLinkCreationLimitPerMonth(100);
+                workspace.setLinkCreationLimitPerMonth(businessWorkspaceLinkCreationLimit);
+                workspace.setMemberLimit(businessWorkspaceMemberLimit);
+
             } else if (workspaceDto.getType() == WorkspaceType.PRO) {
-                workspace.setLinkCreationLimitPerMonth(50);
+                workspace.setLinkCreationLimitPerMonth(proWorkspaceLinkCreationLimit);
+                workspace.setMemberLimit(proWorkspaceMemberLimit);
             } else {
-                workspace.setLinkCreationLimitPerMonth(25);
+                workspace.setLinkCreationLimitPerMonth(freeWorkspaceLinkCreationLimit);
+                workspace.setMemberLimit(freeWorkspaceMemberLimit);
             }
             Workspace updatedWorkspace = workspaceRepository.save(workspace);
 

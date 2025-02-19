@@ -19,4 +19,6 @@ public class WorkspaceDto implements Serializable {
     private WorkspaceType type;
     private int linkCreationLimitPerMonth;
     private int createdLinksThisMonth;
+    private int memberLimit;
+    private int memberCount;
 }

@@ -146,7 +146,7 @@ public class ShortUrlServiceImpl implements ShortUrlService {
         return shortCode.toString();
     }
 
-    // Find all the links under a workspace,
+    // Find all the links under a workspace, user must have to be a member or an owner, and status = verified
     @Override
     public List<ShortUrlDto> getAllUrl(UUID workspaceId) {
         try {

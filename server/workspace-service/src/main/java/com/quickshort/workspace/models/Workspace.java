@@ -53,6 +53,12 @@ public class Workspace implements Serializable {
     @Column(name = "created_links_this_month", nullable = false)
     private int createdLinksThisMonth;
 
+    @Column(name = "member_limit", nullable = false)
+    private int memberLimit;
+
+    @Column(name = "member_count", nullable = false)
+    private int memberCount;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

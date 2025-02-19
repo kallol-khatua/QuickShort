@@ -193,4 +193,24 @@ public class WorkspaceController {
         // Return the response with 200 Created status
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+
+    @PostMapping(value = {"/{workspaceId}/join-as-member", "/{workspaceId}/join-as-member/"})
+    public ResponseEntity<SuccessApiResponse<WorkspaceMemberDto>> joinWorkspaceAsMember(@PathVariable UUID workspaceId) {
+
+        // Join as Member
+        WorkspaceMemberDto joinedMember = workspaceMemberService.joinAsMember(workspaceId);
+
+        // Set up response
+        SuccessApiResponse<WorkspaceMemberDto> response = new SuccessApiResponse<>();
+        response.setStatus_code(HttpStatus.OK.value());
+        response.setStatus_text(HttpStatus.OK.name());
+        response.setSuccess(true);
+        response.setStatus("Applied To Be A Member");
+        response.setMessage("Successfully applied to be a member");
+        response.setData(joinedMember);
+
+        // Return the response with 200 Created status
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 }

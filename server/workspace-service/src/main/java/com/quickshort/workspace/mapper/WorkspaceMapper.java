@@ -9,6 +9,7 @@ public class WorkspaceMapper {
 
         newWorkspace.setName(workspaceDto.getName());
         newWorkspace.setType(workspaceDto.getType());
+        newWorkspace.setMemberLimit(workspaceDto.getMemberLimit());
 
         return newWorkspace;
     }
@@ -22,6 +23,8 @@ public class WorkspaceMapper {
         newDto.setType(workspace.getType());
         newDto.setLinkCreationLimitPerMonth(workspace.getLinkCreationLimitPerMonth());
         newDto.setCreatedLinksThisMonth(workspace.getCreatedLinksThisMonth());
+        newDto.setMemberLimit(workspace.getMemberLimit());
+        newDto.setMemberCount(workspace.getMemberCount());
 
         return newDto;
     }

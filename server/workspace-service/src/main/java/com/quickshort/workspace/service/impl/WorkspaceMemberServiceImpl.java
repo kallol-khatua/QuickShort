@@ -2,13 +2,18 @@ package com.quickshort.workspace.service.impl;
 
 import com.quickshort.common.enums.MemberStatus;
 import com.quickshort.common.enums.MemberType;
+import com.quickshort.common.exception.BadRequestException;
 import com.quickshort.common.exception.FieldError;
+import com.quickshort.common.exception.ForbiddenException;
 import com.quickshort.common.exception.InternalServerErrorException;
 import com.quickshort.workspace.dto.WorkspaceMemberDto;
+import com.quickshort.workspace.mapper.WorkspaceMemberMapper;
 import com.quickshort.workspace.models.User;
+import com.quickshort.workspace.models.Workspace;
 import com.quickshort.workspace.models.WorkspaceMember;
 import com.quickshort.workspace.repository.UserRepository;
 import com.quickshort.workspace.repository.WorkspaceMemberRepository;
+import com.quickshort.workspace.repository.WorkspaceRepository;
 import com.quickshort.workspace.service.WorkspaceMemberService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +24,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +35,9 @@ public class WorkspaceMemberServiceImpl implements WorkspaceMemberService {
 
     @Autowired
     private WorkspaceMemberRepository workspaceMemberRepository;
+
+    @Autowired
+    private WorkspaceRepository workspaceRepository;
 
     @Autowired
     private RedisWorkspaceMemberService redisWorkspaceMemberService;
@@ -117,5 +127,63 @@ public class WorkspaceMemberServiceImpl implements WorkspaceMemberService {
                         workspaceMember.getStatus()
                 ))
                 .collect(Collectors.toList());
+    }
+
+
+    // Apply to be a member of a workspace
+    @Override
+    public WorkspaceMemberDto joinAsMember(UUID workspaceId) {
+        try {
+            // Find the workspace
+            Optional<Workspace> existingWorkspace = workspaceRepository.findById(workspaceId);
+
+
+            // If workspace is not present with the id, then throw error
+            if (existingWorkspace.isEmpty()) {
+                List<FieldError> errors = new ArrayList<>();
+                errors.add(new FieldError("No workspace found", "workspace_id"));
+                throw new BadRequestException("Invalid Data Provided", "No workspace found for the id", errors);
+            }
+
+
+            List<FieldError> errors = new ArrayList<>();
+
+
+            // Check user is already a member of the workspace or not
+            User currUser = getUserFromAuthentication();
+            Workspace workspace = existingWorkspace.get();
+            Optional<WorkspaceMember> workspaceMember = workspaceMemberRepository.findByUserIdAndWorkspaceId(currUser, workspace);
+            // If the current user already associated with the workspace, then throw error
+            if (workspaceMember.isPresent()) {
+                errors.add(new FieldError("User already associated with the workspace"));
+                throw new BadRequestException("User Already Associated With The workspace", "User already associated with the workspace", errors);
+            }
+
+
+            // Check member count limit exceed or not, if exceed then throw error
+            if (workspace.getMemberCount() == workspace.getMemberLimit()) {
+                errors.add(new FieldError("Can not be a member of the workspace"));
+                throw new BadRequestException("Workspace Member Limit Exceed", "Can not be a member of the workspace", errors);
+            }
+
+
+            // Create workspace member
+            WorkspaceMember newWorkspaceMember = new WorkspaceMember();
+            newWorkspaceMember.setWorkspaceId(workspace);
+            newWorkspaceMember.setUserId(currUser);
+            newWorkspaceMember.setMemberType(MemberType.MEMBER);
+            newWorkspaceMember.setStatus(MemberStatus.APPLIED);
+            WorkspaceMember savedWorkspaceMember = workspaceMemberRepository.save(newWorkspaceMember);
+
+
+            return WorkspaceMemberMapper.mapToWorkspaceMemberDto(savedWorkspaceMember);
+        } catch (BadRequestException | ForbiddenException exception) {
+            throw exception;
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error during while finding short url under a workspace", e);
+            List<FieldError> errors = new ArrayList<>();
+            errors.add(new FieldError("Internal Server Error"));
+            throw new InternalServerErrorException("Internal Server Error", "Internal Server Error", errors);
+        }
     }
 }
