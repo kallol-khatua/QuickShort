@@ -184,7 +184,7 @@ public class ShortUrlServiceImpl implements ShortUrlService {
                 throw new ForbiddenException("User Not Verified", "User not is not a VERIFIED OWNER or MEMBER of the Workspace", errors);
             }
 
-            List<ShortUrl> shortUrlList = shortUrlRepository.findAll();
+            List<ShortUrl> shortUrlList = shortUrlRepository.findByWorkspaceId(workspace);
 
             List<ShortUrlDto> shortUrlDtoList = shortUrlList.stream()
                     .map(shortUrl -> new ShortUrlDto(

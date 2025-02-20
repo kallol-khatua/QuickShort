@@ -218,6 +218,27 @@ public class WorkspaceController {
     }
 
 
+    // Apply to join as an owner
+    @PostMapping(value = {"/{workspaceId}/join-as-owner", "/{workspaceId}/join-as-owner/"})
+    public ResponseEntity<SuccessApiResponse<WorkspaceMemberDto>> joinWorkspaceAsOwner(@PathVariable UUID workspaceId) {
+
+        // Join as Member
+        WorkspaceMemberDto joinedMember = workspaceMemberService.joinAsOwner(workspaceId);
+
+        // Set up response
+        SuccessApiResponse<WorkspaceMemberDto> response = new SuccessApiResponse<>();
+        response.setStatus_code(HttpStatus.OK.value());
+        response.setStatus_text(HttpStatus.OK.name());
+        response.setSuccess(true);
+        response.setStatus("Applied To Be An Owner");
+        response.setMessage("Successfully applied to be an owner");
+        response.setData(joinedMember);
+
+        // Return the response with 200 Created status
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+
     // Owner of a workspace can find all the members
     @GetMapping(value = {"/{workspaceId}/members", "/{workspaceId}/members/"})
     public ResponseEntity<SuccessApiResponse<List<WorkspaceMemberDto>>> getAllMembers(@PathVariable UUID workspaceId) {
@@ -242,6 +263,26 @@ public class WorkspaceController {
     public ResponseEntity<SuccessApiResponse<WorkspaceMemberDto>> verifyMember(@PathVariable UUID workspaceId, @PathVariable UUID workspaceMemberId) {
         // Verify a Member
         WorkspaceMemberDto verifiedMember = workspaceMemberService.verifyMember(workspaceId, workspaceMemberId, true);
+
+        // Set up response
+        SuccessApiResponse<WorkspaceMemberDto> response = new SuccessApiResponse<>();
+        response.setStatus_code(HttpStatus.OK.value());
+        response.setStatus_text(HttpStatus.OK.name());
+        response.setSuccess(true);
+        response.setStatus("Verified Successfully");
+        response.setMessage("Successfully verified");
+        response.setData(verifiedMember);
+
+        // Return the response with 200 Created status
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+
+    // Verify member
+    @PostMapping(value = {"/{workspaceId}/verify-member/{workspaceMemberId}/reject", "/{workspaceId}/verify-member/{workspaceMemberId}/reject/"})
+    public ResponseEntity<SuccessApiResponse<WorkspaceMemberDto>> rejectMember(@PathVariable UUID workspaceId, @PathVariable UUID workspaceMemberId) {
+        // Verify a Member
+        WorkspaceMemberDto verifiedMember = workspaceMemberService.verifyMember(workspaceId, workspaceMemberId, false);
 
         // Set up response
         SuccessApiResponse<WorkspaceMemberDto> response = new SuccessApiResponse<>();

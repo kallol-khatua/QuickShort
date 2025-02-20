@@ -191,6 +191,65 @@ public class WorkspaceMemberServiceImpl implements WorkspaceMemberService {
     }
 
 
+    // Apply to be an owner of a workspace
+    @Transactional
+    @Override
+    public WorkspaceMemberDto joinAsOwner(UUID workspaceId) {
+        try {
+            // Find the workspace
+            Optional<Workspace> existingWorkspace = workspaceRepository.findById(workspaceId);
+
+
+            // If workspace is not present with the id, then throw error
+            if (existingWorkspace.isEmpty()) {
+                List<FieldError> errors = new ArrayList<>();
+                errors.add(new FieldError("No workspace found", "workspace_id"));
+                throw new BadRequestException("Invalid Data Provided", "No workspace found for the id", errors);
+            }
+
+
+            List<FieldError> errors = new ArrayList<>();
+
+
+            // Check user is already a member of the workspace or not
+            User currUser = getUserFromAuthentication();
+            Workspace workspace = existingWorkspace.get();
+            Optional<WorkspaceMember> workspaceMember = workspaceMemberRepository.findByUserIdAndWorkspaceId(currUser, workspace);
+            // If the current user already associated with the workspace, then throw error
+            if (workspaceMember.isPresent()) {
+                errors.add(new FieldError("User already associated with the workspace"));
+                throw new BadRequestException("User Already Associated With The workspace", "User already associated with the workspace", errors);
+            }
+
+
+            // Check member count limit exceed or not, if exceed then throw error
+            if (workspace.getMemberCount() == workspace.getMemberLimit()) {
+                errors.add(new FieldError("Can not be an owner of the workspace"));
+                throw new BadRequestException("Workspace Member Limit Exceed", "Can not be an owner of the workspace", errors);
+            }
+
+
+            // Create workspace member
+            WorkspaceMember newWorkspaceMember = new WorkspaceMember();
+            newWorkspaceMember.setWorkspaceId(workspace);
+            newWorkspaceMember.setUserId(currUser);
+            newWorkspaceMember.setMemberType(MemberType.OWNER);
+            newWorkspaceMember.setStatus(MemberStatus.APPLIED);
+            WorkspaceMember savedWorkspaceMember = workspaceMemberRepository.save(newWorkspaceMember);
+
+
+            return WorkspaceMemberMapper.mapToWorkspaceMemberDto(savedWorkspaceMember);
+        } catch (BadRequestException | ForbiddenException exception) {
+            throw exception;
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error during while finding short url under a workspace", e);
+            List<FieldError> errors = new ArrayList<>();
+            errors.add(new FieldError("Internal Server Error"));
+            throw new InternalServerErrorException("Internal Server Error", "Internal Server Error", errors);
+        }
+    }
+
+
     // Get all the members under a workspace, only a verified owner of the workspace cah fetch the data
     @Override
     public List<WorkspaceMemberDto> getAllMembers(UUID workspaceId) {
@@ -258,6 +317,7 @@ public class WorkspaceMemberServiceImpl implements WorkspaceMemberService {
 
 
     // Verify member, only a verified owner of the workspace cah fetch the data
+    // TODO: send email to the verified member
     @Transactional
     @Override
     public WorkspaceMemberDto verifyMember(UUID workspaceId, UUID workspaceMemberId, boolean isVerified) {
