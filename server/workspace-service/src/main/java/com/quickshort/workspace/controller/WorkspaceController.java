@@ -218,6 +218,7 @@ public class WorkspaceController {
     }
 
 
+    // Owner of a workspace can find all the members
     @GetMapping(value = {"/{workspaceId}/members", "/{workspaceId}/members/"})
     public ResponseEntity<SuccessApiResponse<List<WorkspaceMemberDto>>> getAllMembers(@PathVariable UUID workspaceId) {
         List<WorkspaceMemberDto> members = workspaceMemberService.getAllMembers(workspaceId);
@@ -237,19 +238,19 @@ public class WorkspaceController {
 
 
     // Verify member
-    @PostMapping(value = {"/{workspaceId}/verify-member/{workspaceMemberId}", "/{workspaceId}/verify-member/{workspaceMemberId}/"})
-    public ResponseEntity<SuccessApiResponse<List<WorkspaceMemberDto>>> verifyMember(@PathVariable UUID workspaceId, @PathVariable UUID workspaceMemberId) {
-        // Join as Member
-//        WorkspaceMemberDto joinedMember = workspaceMemberService.joinAsMember(workspaceId);
+    @PostMapping(value = {"/{workspaceId}/verify-member/{workspaceMemberId}/verify", "/{workspaceId}/verify-member/{workspaceMemberId}/verify/"})
+    public ResponseEntity<SuccessApiResponse<WorkspaceMemberDto>> verifyMember(@PathVariable UUID workspaceId, @PathVariable UUID workspaceMemberId) {
+        // Verify a Member
+        WorkspaceMemberDto verifiedMember = workspaceMemberService.verifyMember(workspaceId, workspaceMemberId, true);
 
         // Set up response
-        SuccessApiResponse<List<WorkspaceMemberDto>> response = new SuccessApiResponse<>();
+        SuccessApiResponse<WorkspaceMemberDto> response = new SuccessApiResponse<>();
         response.setStatus_code(HttpStatus.OK.value());
         response.setStatus_text(HttpStatus.OK.name());
         response.setSuccess(true);
-        response.setStatus("Applied To Be A Member");
-        response.setMessage("Successfully applied to be a member");
-//        response.setData(joinedMember);
+        response.setStatus("Verified Successfully");
+        response.setMessage("Successfully verified");
+        response.setData(verifiedMember);
 
         // Return the response with 200 Created status
         return ResponseEntity.status(HttpStatus.OK).body(response);

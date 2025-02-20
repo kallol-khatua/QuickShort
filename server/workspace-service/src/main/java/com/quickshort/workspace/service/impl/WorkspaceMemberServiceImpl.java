@@ -6,6 +6,7 @@ import com.quickshort.common.exception.BadRequestException;
 import com.quickshort.common.exception.FieldError;
 import com.quickshort.common.exception.ForbiddenException;
 import com.quickshort.common.exception.InternalServerErrorException;
+import com.quickshort.workspace.dto.WorkspaceDto;
 import com.quickshort.workspace.dto.WorkspaceMemberDto;
 import com.quickshort.workspace.mapper.WorkspaceMemberMapper;
 import com.quickshort.workspace.models.User;
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -131,6 +133,7 @@ public class WorkspaceMemberServiceImpl implements WorkspaceMemberService {
 
 
     // Apply to be a member of a workspace
+    @Transactional
     @Override
     public WorkspaceMemberDto joinAsMember(UUID workspaceId) {
         try {
@@ -188,7 +191,7 @@ public class WorkspaceMemberServiceImpl implements WorkspaceMemberService {
     }
 
 
-    // get all the members under a workspace
+    // Get all the members under a workspace, only a verified owner of the workspace cah fetch the data
     @Override
     public List<WorkspaceMemberDto> getAllMembers(UUID workspaceId) {
         try {
@@ -206,7 +209,6 @@ public class WorkspaceMemberServiceImpl implements WorkspaceMemberService {
 
             List<FieldError> errors = new ArrayList<>();
 
-
             // Check user associated with the workspace or not
             User currUser = getUserFromAuthentication();
             Workspace workspace = existingWorkspace.get();
@@ -214,21 +216,21 @@ public class WorkspaceMemberServiceImpl implements WorkspaceMemberService {
             // If the current user not associated with the workspace, then throw error
             if (member.isEmpty()) {
                 errors.add(new FieldError("User not associated with the workspace"));
-                throw new BadRequestException("Invalid Data Provided", "User not associated with the workspace", errors);
+                throw new ForbiddenException("Invalid Data Provided", "User not associated with the workspace", errors);
             }
 
 
             // If the current user associated with the workspace but not an OWNER, then do not allow to update workspace details
             if (member.get().getMemberType() != MemberType.OWNER) {
                 errors.add(new FieldError("User is not an OWNER of the Workspace"));
-                throw new BadRequestException("Invalid Data Provided", "User is not an OWNER of the Workspace", errors);
+                throw new ForbiddenException("Invalid Data Provided", "User is not an OWNER of the Workspace", errors);
             }
 
 
             // If OWNER is not verified, then not allow to update
             if (member.get().getStatus() != MemberStatus.VERIFIED) {
                 errors.add(new FieldError("User is not a VERIFIED OWNER of the Workspace"));
-                throw new BadRequestException("Invalid Data Provided", "User is not a VERIFIED OWNER of the Workspace", errors);
+                throw new ForbiddenException("Invalid Data Provided", "User is not a VERIFIED OWNER of the Workspace", errors);
             }
 
 
@@ -244,6 +246,104 @@ public class WorkspaceMemberServiceImpl implements WorkspaceMemberService {
                     ))
                     .collect(Collectors.toList());
 
+        } catch (BadRequestException | ForbiddenException exception) {
+            throw exception;
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error during while finding short url under a workspace", e);
+            List<FieldError> errors = new ArrayList<>();
+            errors.add(new FieldError("Internal Server Error"));
+            throw new InternalServerErrorException("Internal Server Error", "Internal Server Error", errors);
+        }
+    }
+
+
+    // Verify member, only a verified owner of the workspace cah fetch the data
+    @Transactional
+    @Override
+    public WorkspaceMemberDto verifyMember(UUID workspaceId, UUID workspaceMemberId, boolean isVerified) {
+        try {
+            // Find the workspace
+            Optional<Workspace> existingWorkspace = workspaceRepository.findById(workspaceId);
+
+
+            // If workspace is not present with the id, then throw error
+            if (existingWorkspace.isEmpty()) {
+                List<FieldError> errors = new ArrayList<>();
+                errors.add(new FieldError("No workspace found", "workspace_id"));
+                throw new BadRequestException("Invalid Data Provided", "No workspace found for the id", errors);
+            }
+
+
+            List<FieldError> errors = new ArrayList<>();
+
+            // Check user associated with the workspace or not
+            User currUser = getUserFromAuthentication();
+            Workspace workspace = existingWorkspace.get();
+            Optional<WorkspaceMember> member = workspaceMemberRepository.findByUserIdAndWorkspaceId(currUser, workspace);
+            // If the current user not associated with the workspace, then throw error
+            if (member.isEmpty()) {
+                errors.add(new FieldError("User not associated with the workspace"));
+                throw new ForbiddenException("Invalid Data Provided", "User not associated with the workspace", errors);
+            }
+
+
+            // If the current user associated with the workspace but not an OWNER, then do not allow to update workspace details
+            if (member.get().getMemberType() != MemberType.OWNER) {
+                errors.add(new FieldError("User is not an OWNER of the Workspace"));
+                throw new ForbiddenException("Invalid Data Provided", "User is not an OWNER of the Workspace", errors);
+            }
+
+
+            // If OWNER is not verified, then not allow to update
+            if (member.get().getStatus() != MemberStatus.VERIFIED) {
+                errors.add(new FieldError("User is not a VERIFIED OWNER of the Workspace"));
+                throw new ForbiddenException("Invalid Data Provided", "User is not a VERIFIED OWNER of the Workspace", errors);
+            }
+
+
+            // Member id should exist in the workspace
+            Optional<WorkspaceMember> workspaceMember = workspaceMemberRepository.findByIdAndWorkspaceId(workspaceMemberId, workspace);
+            if (workspaceMember.isEmpty()) {
+                errors.add(new FieldError("No member found", "workspace_member_id"));
+                throw new BadRequestException("Invalid Data Provided", "No member found for the id", errors);
+            }
+            WorkspaceMember appliedMember = workspaceMember.get();
+
+
+            // If already verified or rejected then not allow to again verify
+            if (appliedMember.getStatus() != MemberStatus.APPLIED) {
+                errors.add(new FieldError("Already verified", "workspace_member_id"));
+                throw new BadRequestException("Invalid Data Provided", "Already verified", errors);
+            }
+
+
+            // In the workspace count should less than the limit to add a member
+            if (workspace.getMemberCount() >= workspace.getMemberLimit()) {
+                errors.add(new FieldError("Can not be verified as member of the workspace"));
+                throw new BadRequestException("Workspace Member Limit Exceed", "Can not be verified as member of the workspace", errors);
+            }
+
+
+            // Update status to verify or reject
+            if (isVerified) {
+                appliedMember.setStatus(MemberStatus.VERIFIED);
+            } else {
+                appliedMember.setStatus(MemberStatus.REJECTED);
+            }
+            WorkspaceMember updatedMember = workspaceMemberRepository.save(appliedMember);
+
+
+            // Update count if verified
+            if (isVerified) {
+                workspace.setMemberCount(workspace.getMemberCount() + 1);
+                workspaceRepository.save(workspace);
+            }
+
+
+            // TODO: send email to the verified member
+
+
+            return WorkspaceMemberMapper.mapToWorkspaceMemberDto(updatedMember);
         } catch (BadRequestException | ForbiddenException exception) {
             throw exception;
         } catch (Exception e) {

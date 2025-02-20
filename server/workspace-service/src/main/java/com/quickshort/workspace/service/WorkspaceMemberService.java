@@ -15,4 +15,6 @@ public interface WorkspaceMemberService {
     WorkspaceMemberDto joinAsMember(UUID workspaceId);
 
     List<WorkspaceMemberDto> getAllMembers(UUID workspaceId);
+
+    WorkspaceMemberDto verifyMember(UUID workspaceId, UUID workspaceMemberId, boolean isVerified);
 }
