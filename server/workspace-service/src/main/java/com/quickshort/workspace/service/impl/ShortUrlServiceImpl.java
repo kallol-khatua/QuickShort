@@ -4,10 +4,7 @@ import com.quickshort.common.enums.MemberStatus;
 import com.quickshort.common.enums.MemberType;
 import com.quickshort.common.enums.ShortUrlStatus;
 import com.quickshort.common.enums.WorkspaceType;
-import com.quickshort.common.exception.BadRequestException;
-import com.quickshort.common.exception.FieldError;
-import com.quickshort.common.exception.ForbiddenException;
-import com.quickshort.common.exception.InternalServerErrorException;
+import com.quickshort.common.exception.*;
 import com.quickshort.workspace.dto.ShortUrlDto;
 import com.quickshort.workspace.mapper.ShortUrlMapper;
 import com.quickshort.workspace.mapper.WorkspaceMapper;
@@ -101,7 +98,11 @@ public class ShortUrlServiceImpl implements ShortUrlService {
             }
 
 
-            // TODO: check link creation limit
+            // Check link creation limit, if exceed then do not allow to create link
+            if (workspace.getCreatedLinksThisMonth() >= workspace.getLinkCreationLimitPerMonth()) {
+                errors.add(new FieldError("Can not create new link this month"));
+                throw new TooManyRequest("Link Creation Limit Exceed", "Can not create new link this month", errors);
+            }
 
 
             // Create Short URL
@@ -118,14 +119,16 @@ public class ShortUrlServiceImpl implements ShortUrlService {
             ShortUrl savedUrl = shortUrlRepository.save(shortUrl);
 
 
-            // TODO: Update link creation limit
+            // Update link creation limit
+            workspace.setCreatedLinksThisMonth(workspace.getCreatedLinksThisMonth() + 1);
+            workspaceRepository.save(workspace);
 
 
             // TODO: Send created link to kafka
 
 
             return ShortUrlMapper.mapToShortURLDto(savedUrl);
-        } catch (BadRequestException | ForbiddenException exception) {
+        } catch (BadRequestException | ForbiddenException | TooManyRequest exception) {
             throw exception;
         } catch (Exception e) {
             LOGGER.error("Unexpected error during short url creation", e);

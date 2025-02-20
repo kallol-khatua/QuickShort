@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.quickshort.common.enums.WorkspaceType;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.apachecommons.CommonsLog;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -52,6 +53,9 @@ public class Workspace implements Serializable {
 
     @Column(name = "created_links_this_month", nullable = false)
     private int createdLinksThisMonth;
+
+    @Column(name = "last_reset")
+    private LocalDateTime lastReset;
 
     @Column(name = "member_limit", nullable = false)
     private int memberLimit;
