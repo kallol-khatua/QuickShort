@@ -3,6 +3,7 @@ package com.quickshort.analytics.service.impl;
 import com.quickshort.analytics.model.ShortUrl;
 import com.quickshort.analytics.repository.ShortUrlRepository;
 import com.quickshort.analytics.service.ShortUrlService;
+import com.quickshort.analytics.service.redis.RedisShortUrlService;
 import com.quickshort.common.payload.ShortUrlPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,12 +18,23 @@ public class ShortUrlServiceImpl implements ShortUrlService {
     @Autowired
     private ShortUrlRepository shortUrlRepository;
 
+    @Autowired
+    private RedisShortUrlService redisShortUrlService;
+
     @Override
     public ShortUrl saveShortUrl(ShortUrlPayload payload) {
         try {
             ShortUrl newUrl = getNewUrl(payload);
 
-            return shortUrlRepository.save(newUrl);
+            ShortUrl savedUrl = shortUrlRepository.save(newUrl);
+
+            LOGGER.info("Short url saved -> {}", savedUrl);
+
+            // Add to cache
+            redisShortUrlService.addToCache(savedUrl.getShortCode(), savedUrl);
+            LOGGER.info("Short url is added to cache");
+
+            return savedUrl;
         } catch (Exception e) {
             LOGGER.error("Unexpected error during short url creation", e);
             return null;

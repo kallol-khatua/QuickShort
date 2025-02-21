@@ -23,8 +23,6 @@ public class UrlCreationTopicConsumer {
             LOGGER.info("Short url creation event received in analytics service -> {}", event);
 
             ShortUrl savedUrl = shortUrlService.saveShortUrl(event.getShortUrlPayload());
-
-            LOGGER.info("Short url saved -> {}", savedUrl);
         } catch (Exception e) {
             LOGGER.error("Error processing Short url creation event in analytics service: {}", e.getMessage(), e);
         }
