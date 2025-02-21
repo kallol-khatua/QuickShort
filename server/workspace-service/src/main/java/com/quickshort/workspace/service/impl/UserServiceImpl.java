@@ -32,9 +32,7 @@ public class UserServiceImpl implements UserService {
             return userRepository.save(newUser);
         } catch (Exception e) {
             LOGGER.error("Unexpected error during user account creation", e);
-            List<FieldError> errors = new ArrayList<>();
-            errors.add(new FieldError("Internal Server Error"));
-            throw new InternalServerErrorException("Internal Server Error", "Internal Server Error", errors);
+            return null;
         }
     }
 
