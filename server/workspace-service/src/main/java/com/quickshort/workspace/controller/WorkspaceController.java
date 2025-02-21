@@ -5,12 +5,14 @@ import com.quickshort.workspace.dto.ShortUrlDto;
 import com.quickshort.workspace.dto.WorkspaceDto;
 
 import com.quickshort.workspace.dto.WorkspaceMemberDto;
+import com.quickshort.workspace.models.ShortUrl;
 import com.quickshort.workspace.service.ShortUrlService;
 import com.quickshort.workspace.service.WorkspaceMemberService;
 import com.quickshort.workspace.service.WorkspaceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -179,12 +181,14 @@ public class WorkspaceController {
 
     // Find short urls
     @GetMapping(value = {"/{workspaceId}/shorten-url", "/{workspaceId}/shorten-url/"})
-    public ResponseEntity<SuccessApiResponse<List<ShortUrlDto>>> findAllUrl(@PathVariable UUID workspaceId) {
+    public ResponseEntity<SuccessApiResponse<Page<ShortUrl>>> findAllUrl(@PathVariable UUID workspaceId,
+                                                                            @RequestParam(defaultValue = "0") int page,
+                                                                            @RequestParam(defaultValue = "10") int size) {
 
-        List<ShortUrlDto> shortUrlDtoList = shortUrlService.getAllUrl(workspaceId);
+        Page<ShortUrl> shortUrlDtoList = shortUrlService.getAllUrl(workspaceId, page, size);
 
         // Set up response
-        SuccessApiResponse<List<ShortUrlDto>> response = new SuccessApiResponse<>();
+        SuccessApiResponse<Page<ShortUrl>> response = new SuccessApiResponse<>();
         response.setStatus_code(HttpStatus.OK.value());
         response.setStatus_text(HttpStatus.OK.name());
         response.setSuccess(true);

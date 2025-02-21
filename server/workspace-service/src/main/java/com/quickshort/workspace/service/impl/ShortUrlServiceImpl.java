@@ -17,6 +17,10 @@ import com.quickshort.workspace.repository.UserRepository;
 import com.quickshort.workspace.repository.WorkspaceMemberRepository;
 import com.quickshort.workspace.repository.WorkspaceRepository;
 import com.quickshort.workspace.service.ShortUrlService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -151,7 +155,7 @@ public class ShortUrlServiceImpl implements ShortUrlService {
 
     // Find all the links under a workspace, user must have to be a member or an owner, and status = verified
     @Override
-    public List<ShortUrlDto> getAllUrl(UUID workspaceId) {
+    public Page<ShortUrl> getAllUrl(UUID workspaceId, int page, int size) {
         try {
             // Find the workspace
             Optional<Workspace> existingWorkspace = workspaceRepository.findById(workspaceId);
@@ -187,24 +191,26 @@ public class ShortUrlServiceImpl implements ShortUrlService {
                 throw new ForbiddenException("User Not Verified", "User not is not a VERIFIED OWNER or MEMBER of the Workspace", errors);
             }
 
-            List<ShortUrl> shortUrlList = shortUrlRepository.findByWorkspaceId(workspace);
+//            List<ShortUrl> shortUrlList = shortUrlRepository.findByWorkspaceId(workspace);
+//
+//            List<ShortUrlDto> shortUrlDtoList = shortUrlList.stream()
+//                    .map(shortUrl -> new ShortUrlDto(
+//                            shortUrl.getId(),
+//                            shortUrl.getWorkspaceId().getId(),
+//                            shortUrl.getWorkspaceMemberID().getId(),
+//                            shortUrl.getOriginalUrl(),
+//                            shortUrl.getShortCode(),
+//                            shortUrl.getExpiresAt(),
+//                            shortUrl.isActive(),
+//                            shortUrl.getStatus()
+//                    ))
+//                    .collect(Collectors.toList());
+//
+//            LOGGER.info("All the short url found for workspace -> {}", workspace.getId());
 
-            List<ShortUrlDto> shortUrlDtoList = shortUrlList.stream()
-                    .map(shortUrl -> new ShortUrlDto(
-                            shortUrl.getId(),
-                            shortUrl.getWorkspaceId().getId(),
-                            shortUrl.getWorkspaceMemberID().getId(),
-                            shortUrl.getOriginalUrl(),
-                            shortUrl.getShortCode(),
-                            shortUrl.getExpiresAt(),
-                            shortUrl.isActive(),
-                            shortUrl.getStatus()
-                    ))
-                    .collect(Collectors.toList());
+            Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-            LOGGER.info("All the short url found for workspace -> {}", workspace.getId());
-
-            return shortUrlDtoList;
+            return shortUrlRepository.findByWorkspaceId(pageable, workspace);
         } catch (BadRequestException | ForbiddenException exception) {
             throw exception;
         } catch (Exception e) {
