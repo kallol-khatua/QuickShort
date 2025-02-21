@@ -1,13 +1,13 @@
 package com.quickshort.workspace.service.impl;
 
 import com.quickshort.common.enums.MemberStatus;
-import com.quickshort.common.enums.MemberType;
 import com.quickshort.common.enums.ShortUrlStatus;
-import com.quickshort.common.enums.WorkspaceType;
+import com.quickshort.common.events.ShortUrlCreationEvent;
 import com.quickshort.common.exception.*;
+import com.quickshort.common.payload.ShortUrlPayload;
 import com.quickshort.workspace.dto.ShortUrlDto;
+import com.quickshort.workspace.kafka.producers.URLCreationProducer;
 import com.quickshort.workspace.mapper.ShortUrlMapper;
-import com.quickshort.workspace.mapper.WorkspaceMapper;
 import com.quickshort.workspace.models.ShortUrl;
 import com.quickshort.workspace.models.User;
 import com.quickshort.workspace.models.Workspace;
@@ -47,6 +47,9 @@ public class ShortUrlServiceImpl implements ShortUrlService {
 
     @Autowired
     private WorkspaceMemberRepository workspaceMemberRepository;
+
+    @Autowired
+    private URLCreationProducer urlCreationProducer;
 
     private User getUserFromAuthentication() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -128,7 +131,15 @@ public class ShortUrlServiceImpl implements ShortUrlService {
             workspaceRepository.save(workspace);
 
 
-            // TODO: Send created link to kafka
+            // Send created link to kafka
+            ShortUrlCreationEvent event = new ShortUrlCreationEvent();
+            event.setStatus("Short URL Created");
+            event.setMessage("New short url created");
+            event.setKey(savedUrl.getId().toString());
+            // Set payload
+            ShortUrlPayload payload = getPayload(savedUrl);
+            event.setShortUrlPayload(payload);
+            urlCreationProducer.sendURLCreationMessage(event.getKey(), event);
 
 
             return ShortUrlMapper.mapToShortURLDto(savedUrl);
@@ -140,6 +151,24 @@ public class ShortUrlServiceImpl implements ShortUrlService {
             errors.add(new FieldError("Internal Server Error"));
             throw new InternalServerErrorException("Internal Server Error", "Internal Server Error", errors);
         }
+    }
+
+
+    private ShortUrlPayload getPayload(ShortUrl url) {
+        ShortUrlPayload payload = new ShortUrlPayload();
+
+        payload.setId(url.getId());
+        payload.setWorkspaceId(url.getWorkspaceId().getId());
+        payload.setWorkspaceMemberID(url.getWorkspaceMemberID().getId());
+        payload.setOriginalUrl(url.getOriginalUrl());
+        payload.setShortCode(url.getShortCode());
+        payload.setExpiresAt(url.getExpiresAt());
+        payload.setActive(url.isActive());
+        payload.setStatus(url.getStatus());
+        payload.setCreatedAt(url.getCreatedAt());
+        payload.setUpdatedAt(url.getUpdatedAt());
+
+        return payload;
     }
 
 

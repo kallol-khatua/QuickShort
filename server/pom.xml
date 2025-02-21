@@ -21,6 +21,7 @@
         <module>Email-service</module>
         <module>common</module>
         <module>workspace-service</module>
+        <module>analytics</module>
     </modules>
 
     <properties>

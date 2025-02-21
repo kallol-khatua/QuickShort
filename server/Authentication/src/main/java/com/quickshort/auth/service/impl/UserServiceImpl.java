@@ -41,6 +41,7 @@ public class UserServiceImpl implements UserService {
     private JwtUtil jwtUtil;
 
     // TODO: Add data validation
+    // TODO: Check email already registered or not
     @Override
     public UserDto registerUser(UserDto userDto) {
         try {

@@ -12,6 +12,15 @@
         <module name="Authentication" />
         <module name="Email-service" />
       </profile>
+      <profile name="Annotation profile for quickshort-server" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
+        </processorPath>
+        <module name="analytics" />
+      </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="microservices-new" target="17" />
@@ -21,6 +30,7 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="Authentication" options="-parameters" />
       <module name="Email-service" options="-parameters" />
+      <module name="analytics" options="-parameters" />
       <module name="common" options="-parameters" />
       <module name="workspace-service" options="-parameters" />
     </option>
