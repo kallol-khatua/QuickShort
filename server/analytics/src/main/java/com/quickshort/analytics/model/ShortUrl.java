@@ -1,11 +1,14 @@
 package com.quickshort.analytics.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.quickshort.common.enums.ShortUrlStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -47,6 +50,11 @@ public class ShortUrl implements Serializable {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "shortUrl")
+    @JsonManagedReference
+    @JsonIgnore
+    private List<ClickTracking> clickTrackings;
 
     @PrePersist
     protected void onCreate() {
