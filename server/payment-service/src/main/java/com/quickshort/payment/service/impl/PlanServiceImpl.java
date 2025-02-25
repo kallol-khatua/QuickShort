@@ -51,4 +51,16 @@ public class PlanServiceImpl implements PlanService {
             throw new InternalServerErrorException("Internal Server Error", "Internal Server Error", errors);
         }
     }
+
+    @Override
+    public List<Plan> getAllPlan() {
+        try {
+            return planRepository.findAll();
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error during finding all plans ", e);
+            List<FieldError> errors = new ArrayList<>();
+            errors.add(new FieldError("Internal Server Error"));
+            throw new InternalServerErrorException("Internal Server Error", "Internal Server Error", errors);
+        }
+    }
 }

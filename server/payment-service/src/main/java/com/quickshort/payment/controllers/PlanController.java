@@ -8,10 +8,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @CrossOrigin("*")
 @RestController
@@ -23,23 +22,42 @@ public class PlanController {
     @Autowired
     private PlanService planService;
 
-    @PostMapping({"/", ""})
-    public ResponseEntity<SuccessApiResponse<Plan>> createPlan() {
-        // Create plan
-        Plan createdPlan = planService.cratePlan();
+//    @PostMapping({"/", ""})
+//    public ResponseEntity<SuccessApiResponse<Plan>> createPlan() {
+//        // Create plan
+//        Plan createdPlan = planService.cratePlan();
+//
+//        LOGGER.info("New plan created -> {}", createdPlan);
+//
+//        // Set up response
+//        SuccessApiResponse<Plan> response = new SuccessApiResponse<>();
+//        response.setStatus_code(HttpStatus.CREATED.value());
+//        response.setStatus_text(HttpStatus.CREATED.name());
+//        response.setSuccess(true);
+//        response.setStatus("Plan Created");
+//        response.setMessage("New plan created");
+//        response.setData(createdPlan);
+//
+//        // Return the response with 201 Created status
+//        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+//    }
 
-        LOGGER.info("New plan created -> {}", createdPlan);
+
+    @GetMapping({"/", ""})
+    public ResponseEntity<SuccessApiResponse<List<Plan>>> getAllPlan() {
+        // Get all existing plan
+        List<Plan> plans = planService.getAllPlan();
 
         // Set up response
-        SuccessApiResponse<Plan> response = new SuccessApiResponse<>();
-        response.setStatus_code(HttpStatus.CREATED.value());
-        response.setStatus_text(HttpStatus.CREATED.name());
+        SuccessApiResponse<List<Plan>> response = new SuccessApiResponse<>();
+        response.setStatus_code(HttpStatus.OK.value());
+        response.setStatus_text(HttpStatus.OK.name());
         response.setSuccess(true);
         response.setStatus("Plan Created");
         response.setMessage("New plan created");
-        response.setData(createdPlan);
+        response.setData(plans);
 
-        // Return the response with 201 Created status
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        // Return the response with 200 status
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }
