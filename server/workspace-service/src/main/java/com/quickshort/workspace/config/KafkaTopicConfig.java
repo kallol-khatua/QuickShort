@@ -12,8 +12,16 @@ public class KafkaTopicConfig {
     @Value("${spring.kafka.url-creation-topic}")
     private String urlCreationTopicName;
 
+    @Value("${spring.kafka.workspace-creation-topic}")
+    private String workspaceCreationTopicName;
+
     @Bean
     public NewTopic urlCreationTopic() {
         return TopicBuilder.name(urlCreationTopicName).build();
+    }
+
+    @Bean
+    public NewTopic workspaceCreationTopic() {
+        return TopicBuilder.name(workspaceCreationTopicName).build();
     }
 }

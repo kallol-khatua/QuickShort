@@ -1,8 +1,7 @@
 package com.quickshort.common.enums;
 
-public enum ShortUrlStatus {
+public enum WorkspaceStatus {
     ACTIVE,
     SUSPENDED,
-    DISABLED,
-    EXPIRED
+    DISABLED
 }

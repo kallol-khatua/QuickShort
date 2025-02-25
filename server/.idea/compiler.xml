@@ -8,6 +8,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="analytics" />
+        <module name="payment" />
         <module name="common" />
         <module name="workspace-service" />
         <module name="Authentication" />
@@ -24,6 +25,7 @@
       <module name="Email-service" options="-parameters" />
       <module name="analytics" options="-parameters" />
       <module name="common" options="-parameters" />
+      <module name="payment" options="-parameters" />
       <module name="workspace-service" options="-parameters" />
     </option>
   </component>

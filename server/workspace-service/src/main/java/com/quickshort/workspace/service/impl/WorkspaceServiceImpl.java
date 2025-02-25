@@ -2,11 +2,16 @@ package com.quickshort.workspace.service.impl;
 
 import com.quickshort.common.enums.MemberStatus;
 import com.quickshort.common.enums.MemberType;
+import com.quickshort.common.enums.WorkspaceStatus;
 import com.quickshort.common.enums.WorkspaceType;
+import com.quickshort.common.events.WorkspaceCreationEvent;
 import com.quickshort.common.exception.BadRequestException;
 import com.quickshort.common.exception.FieldError;
 import com.quickshort.common.exception.InternalServerErrorException;
+import com.quickshort.common.payload.ShortUrlPayload;
+import com.quickshort.common.payload.WorkspacePayload;
 import com.quickshort.workspace.dto.WorkspaceDto;
+import com.quickshort.workspace.kafka.producers.WorkspaceCreationProducer;
 import com.quickshort.workspace.mapper.WorkspaceMapper;
 import com.quickshort.workspace.models.User;
 import com.quickshort.workspace.models.Workspace;
@@ -25,6 +30,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -40,6 +47,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
     @Autowired
     private WorkspaceRepository workspaceRepository;
+
+    @Autowired
+    private WorkspaceCreationProducer workspaceCreationProducer;
 
     @Autowired
     private WorkspaceMemberRepository workspaceMemberRepository;
@@ -85,16 +95,36 @@ public class WorkspaceServiceImpl implements WorkspaceService {
             User currUser = getUserFromAuthentication();
 
 
-            // Create new workspace
+            // Create new free workspace
             Workspace newWorkspace = WorkspaceMapper.mapToWorkspace(workspaceDto);
-            // Free workspace
+            newWorkspace.setCreatedBy(currUser);
             newWorkspace.setType(WorkspaceType.FREE);
             newWorkspace.setLinkCreationLimitPerMonth(freeWorkspaceLinkCreationLimit);
             newWorkspace.setCreatedLinksThisMonth(0);
             newWorkspace.setMemberLimit(freeWorkspaceMemberLimit);
             newWorkspace.setMemberCount(1);
-            newWorkspace.setCreatedBy(currUser);
+
+            LocalDate currentDate = LocalDate.now();
+            newWorkspace.setLastResetDate(currentDate);
+
+            LocalDate nextMonthDate = currentDate.plusMonths(1);
+            newWorkspace.setNextResetDate(nextMonthDate);
+
+            newWorkspace.setWorkspaceStatus(WorkspaceStatus.ACTIVE);
+
             Workspace savedWorkspace = workspaceRepository.save(newWorkspace);
+
+
+            // Send created workspace to kafka
+            WorkspaceCreationEvent event = new WorkspaceCreationEvent();
+            event.setKey(savedWorkspace.getId().toString());
+            event.setMessage("New free workspace created");
+            event.setStatus("Workspace Created");
+            // Set payload
+            WorkspacePayload payload = getWorkspacePayload(savedWorkspace);
+            event.setWorkspacePayload(payload);
+
+            workspaceCreationProducer.sendWorkspaceCreationMessage(event.getKey(), event);
 
 
             // Create workspace member
@@ -115,6 +145,27 @@ public class WorkspaceServiceImpl implements WorkspaceService {
             errors.add(new FieldError("Internal Server Error"));
             throw new InternalServerErrorException("Internal Server Error", "Internal Server Error", errors);
         }
+    }
+
+    // Function to get workspace payload from saved workspace
+    private WorkspacePayload getWorkspacePayload(Workspace savedWorkspace) {
+        WorkspacePayload payload = new WorkspacePayload();
+
+        payload.setId(savedWorkspace.getId());
+        payload.setType(savedWorkspace.getType());
+        payload.setCreatedAt(savedWorkspace.getCreatedAt());
+        payload.setUpdatedAt(savedWorkspace.getUpdatedAt());
+
+        payload.setLinkCreationLimitPerMonth(savedWorkspace.getLinkCreationLimitPerMonth());
+        payload.setMemberLimit(savedWorkspace.getMemberLimit());
+
+        payload.setLastResetDate(savedWorkspace.getLastResetDate());
+        payload.setNextResetDate(savedWorkspace.getNextResetDate());
+        payload.setNextBillingDate(savedWorkspace.getNextBillingDate());
+
+        payload.setWorkspaceStatus(savedWorkspace.getWorkspaceStatus());
+
+        return payload;
     }
 
     // Update existing workspace details

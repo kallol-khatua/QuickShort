@@ -22,6 +22,7 @@
         <module>common</module>
         <module>workspace-service</module>
         <module>analytics</module>
+        <module>payment-service</module>
     </modules>
 
     <properties>
