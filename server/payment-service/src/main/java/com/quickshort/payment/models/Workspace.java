@@ -1,5 +1,7 @@
 package com.quickshort.payment.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.quickshort.common.enums.WorkspaceStatus;
 import com.quickshort.common.enums.WorkspaceType;
 import jakarta.persistence.*;
@@ -8,6 +10,7 @@ import lombok.*;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -44,6 +47,11 @@ public class Workspace implements Serializable {
     @Enumerated(EnumType.STRING)
     @Column(name = "workspace_status", nullable = false)
     private WorkspaceStatus workspaceStatus;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "workspaceId")
+    @JsonIgnore
+    private List<Order> orders;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

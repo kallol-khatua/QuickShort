@@ -29,12 +29,12 @@ public class PlanServiceImpl implements PlanService {
     public Plan cratePlan() {
         try {
             Plan newPlan = new Plan();
-            newPlan.setWorkspaceType(WorkspaceType.BUSINESS);
-            newPlan.setMemberLimit(25);
-            newPlan.setLinkCreationLimitPerMonth(5000);
+            newPlan.setWorkspaceType(WorkspaceType.PRO);
+            newPlan.setMemberLimit(10);
+            newPlan.setLinkCreationLimitPerMonth(1000);
 
-            newPlan.setAmount(2500.00);
-            newPlan.setAmountPerMonth(2500.00);
+            newPlan.setAmount(1000.00);
+            newPlan.setAmountPerMonth(1000.00);
             newPlan.setPlanDuration(PlanDuration.MONTHLY);
 
             newPlan.setPlanDurationMonth(1);

@@ -1,10 +1,13 @@
 package com.quickshort.payment.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.quickshort.common.enums.WorkspaceType;
 import com.quickshort.payment.enums.PlanDuration;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -13,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @ToString
 @Entity
-@Table(name = "plan")
+@Table(name = "plans")
 public class Plan {
     @Id
     @GeneratedValue(generator = "UUID")
@@ -45,4 +48,9 @@ public class Plan {
 
     @Column(name = "percentage_off", nullable = false)
     private double percentageOff;
+
+    @JsonManagedReference
+    @OneToMany(mappedBy = "planId")
+    @JsonIgnore
+    private List<Order> orders;
 }

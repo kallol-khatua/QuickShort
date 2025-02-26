@@ -22,25 +22,25 @@ public class PlanController {
     @Autowired
     private PlanService planService;
 
-//    @PostMapping({"/", ""})
-//    public ResponseEntity<SuccessApiResponse<Plan>> createPlan() {
-//        // Create plan
-//        Plan createdPlan = planService.cratePlan();
-//
-//        LOGGER.info("New plan created -> {}", createdPlan);
-//
-//        // Set up response
-//        SuccessApiResponse<Plan> response = new SuccessApiResponse<>();
-//        response.setStatus_code(HttpStatus.CREATED.value());
-//        response.setStatus_text(HttpStatus.CREATED.name());
-//        response.setSuccess(true);
-//        response.setStatus("Plan Created");
-//        response.setMessage("New plan created");
-//        response.setData(createdPlan);
-//
-//        // Return the response with 201 Created status
-//        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-//    }
+    @PostMapping({"/", ""})
+    public ResponseEntity<SuccessApiResponse<Plan>> createPlan() {
+        // Create plan
+        Plan createdPlan = planService.cratePlan();
+
+        LOGGER.info("New plan created -> {}", createdPlan);
+
+        // Set up response
+        SuccessApiResponse<Plan> response = new SuccessApiResponse<>();
+        response.setStatus_code(HttpStatus.CREATED.value());
+        response.setStatus_text(HttpStatus.CREATED.name());
+        response.setSuccess(true);
+        response.setStatus("Plan Created");
+        response.setMessage("New plan created");
+        response.setData(createdPlan);
+
+        // Return the response with 201 Created status
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
 
 
     @GetMapping({"/", ""})
