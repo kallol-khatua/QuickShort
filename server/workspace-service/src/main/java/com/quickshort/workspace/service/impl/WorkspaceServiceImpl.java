@@ -249,6 +249,40 @@ public class WorkspaceServiceImpl implements WorkspaceService {
         }
     }
 
+    // Function to upgrade workspace type and details when user first buy any plan
+    @Transactional
+    @Override
+    public Workspace workspaceTypeUpgrade(WorkspacePayload payload) {
+        try {
+            Optional<Workspace> existingWorkspace = workspaceRepository.findById(payload.getId());
+            if (existingWorkspace.isEmpty()) {
+                throw new Exception("Workspace not found");
+            }
+            Workspace workspace = getWorkspace(payload, existingWorkspace.get());
+
+            return workspaceRepository.save(workspace);
+        } catch (Exception e) {
+            LOGGER.error("Error processing workspaceTypeUpgradation message: {}", e.getMessage(), e);
+            return null;
+        }
+    }
+
+    // Function to extract and update workspace from the payload
+    private Workspace getWorkspace(WorkspacePayload payload, Workspace workspace) {
+
+        workspace.setType(payload.getType());
+        workspace.setLinkCreationLimitPerMonth(payload.getLinkCreationLimitPerMonth());
+        // when subscribe to a plan the set url count to 0
+        workspace.setCreatedLinksThisMonth(0);
+        workspace.setMemberLimit(payload.getMemberLimit());
+        workspace.setLastResetDate(payload.getLastResetDate());
+        workspace.setNextResetDate(payload.getNextResetDate());
+        workspace.setNextBillingDate(payload.getNextBillingDate());
+        workspace.setWorkspaceStatus(payload.getWorkspaceStatus());
+
+        return workspace;
+    }
+
 
     // Scheduled function to reset monthly link creation count
     @Scheduled(cron = "0 0 0 1 * ?") // Runs at midnight on the 1st of every month

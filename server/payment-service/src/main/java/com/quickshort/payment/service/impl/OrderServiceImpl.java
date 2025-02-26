@@ -1,12 +1,16 @@
 package com.quickshort.payment.service.impl;
 
 import com.quickshort.common.enums.WorkspaceStatus;
+import com.quickshort.common.enums.WorkspaceType;
+import com.quickshort.common.events.WorkspaceTypeUpgradationEvent;
 import com.quickshort.common.exception.BadRequestException;
 import com.quickshort.common.exception.FieldError;
 import com.quickshort.common.exception.ForbiddenException;
 import com.quickshort.common.exception.InternalServerErrorException;
+import com.quickshort.common.payload.WorkspacePayload;
 import com.quickshort.payment.dto.OrderDto;
 import com.quickshort.payment.enums.OrderStatus;
+import com.quickshort.payment.kafka.producers.WorkspaceTypeUpgradationProducer;
 import com.quickshort.payment.mappers.OrderMapper;
 import com.quickshort.payment.models.Order;
 import com.quickshort.payment.models.Plan;
@@ -44,6 +48,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private RazorpayService razorpayService;
 
+    @Autowired
+    private WorkspaceTypeUpgradationProducer workspaceTypeUpgradationProducer;
+
     // Create razorpay order, or return already created one
     @Transactional
     @Override
@@ -79,6 +86,13 @@ public class OrderServiceImpl implements OrderService {
             Workspace workspace = existingWorkspace.get();
 
 
+            // Allow to upgrade only for free type
+            if (workspace.getType() != WorkspaceType.FREE) {
+                errors.add(new FieldError("Already Upgraded To Premium Plans", "workspace_id"));
+                throw new BadRequestException("Already Upgraded To Premium Plans", "Repeat existing plan of choose another one", errors);
+            }
+
+
             // If order is already created when status is awaiting payment then return the already created order
             Optional<Order> existingOrder = orderRepository.findByWorkspaceIdAndOrderStatus(workspace, OrderStatus.AWAITING_PAYMENT);
             if (existingOrder.isPresent()) {
@@ -112,7 +126,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
 
-    // Verify payment
+    // Verify payment, update workspace details, update order, and send to kafka
     @Transactional
     @Override
     public OrderDto verifyPayment(String paymentId, String orderId, String signature) {
@@ -182,7 +196,7 @@ public class OrderServiceImpl implements OrderService {
                 // if curr date is 2025-02-26 and plan duration is 3 month then next billing date will be 2025-05-26
                 workspace.setNextBillingDate(currentDate.plusMonths(plan.getPlanDurationMonth()));
 
-                workspaceRepository.save(workspace);
+                Workspace upgradedWorkspace = workspaceRepository.save(workspace);
 
 
                 // Update existing order
@@ -197,7 +211,16 @@ public class OrderServiceImpl implements OrderService {
                 Order updatedOrder = orderRepository.save(order);
 
 
-                // TODO: send updated workspace to kafka
+                // Send updated workspace to kafka
+                WorkspaceTypeUpgradationEvent event = new WorkspaceTypeUpgradationEvent();
+                event.setKey(upgradedWorkspace.getId().toString());
+                event.setMessage("Workspace upgraded");
+                event.setStatus("Workspace Upgraded");
+                // Set payload
+                WorkspacePayload payload = getWorkspacePayload(upgradedWorkspace);
+                event.setWorkspacePayload(payload);
+
+                workspaceTypeUpgradationProducer.workspaceTypeUpgradationMessage(event.getKey(), event);
 
 
                 return OrderMapper.maptoOrderDto(updatedOrder);
@@ -216,5 +239,26 @@ public class OrderServiceImpl implements OrderService {
             errors.add(new FieldError("Internal Server Error"));
             throw new InternalServerErrorException("Internal Server Error", "Internal Server Error", errors);
         }
+    }
+
+    // Function to get workspace payload from upgraded workspace
+    private WorkspacePayload getWorkspacePayload(Workspace upgradedWorkspace) {
+        WorkspacePayload payload = new WorkspacePayload();
+
+        payload.setId(upgradedWorkspace.getId());
+        payload.setType(upgradedWorkspace.getType());
+        payload.setCreatedAt(upgradedWorkspace.getCreatedAt());
+        payload.setUpdatedAt(upgradedWorkspace.getUpdatedAt());
+
+        payload.setLinkCreationLimitPerMonth(upgradedWorkspace.getLinkCreationLimitPerMonth());
+        payload.setMemberLimit(upgradedWorkspace.getMemberLimit());
+
+        payload.setLastResetDate(upgradedWorkspace.getLastResetDate());
+        payload.setNextResetDate(upgradedWorkspace.getNextResetDate());
+        payload.setNextBillingDate(upgradedWorkspace.getNextBillingDate());
+
+        payload.setWorkspaceStatus(upgradedWorkspace.getWorkspaceStatus());
+
+        return payload;
     }
 }
