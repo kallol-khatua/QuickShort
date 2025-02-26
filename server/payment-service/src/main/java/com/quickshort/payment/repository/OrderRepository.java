@@ -12,4 +12,6 @@ import java.util.UUID;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, UUID> {
     Optional<Order> findByWorkspaceIdAndOrderStatus(Workspace workspaceId, OrderStatus orderStatus);
+
+    Optional<Order> findByRazorpayOrderId(String razorpayOrderId);
 }

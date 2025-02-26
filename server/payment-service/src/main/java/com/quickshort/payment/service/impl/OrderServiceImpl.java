@@ -1,5 +1,6 @@
 package com.quickshort.payment.service.impl;
 
+import com.quickshort.common.enums.WorkspaceStatus;
 import com.quickshort.common.exception.BadRequestException;
 import com.quickshort.common.exception.FieldError;
 import com.quickshort.common.exception.ForbiddenException;
@@ -21,6 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -108,22 +111,103 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+
     // Verify payment
     @Transactional
     @Override
     public OrderDto verifyPayment(String paymentId, String orderId, String signature) {
         try {
-            Optional<Order> existingOrder = orderRepository.findById("KJDJDJ");
-
-            boolean isValid = razorpayService.verifyPayment(paymentId, orderId, signature);
-
-            if (isValid) {
-
-            } else {
-
+            List<FieldError> errors = new ArrayList<>();
+            // Check all data present or not
+            if (orderId == null || orderId.isEmpty()) {
+                errors.add(new FieldError("Order id is required", "order_id"));
+            }
+            if (paymentId == null || paymentId.isEmpty()) {
+                errors.add(new FieldError("Payment id is required", "payment_id"));
+            }
+            if (signature == null || signature.isEmpty()) {
+                errors.add(new FieldError("Signature is required", "signature"));
+            }
+            if (!errors.isEmpty()) {
+                throw new BadRequestException("Invalid Data Provided", "Please fill all the details", errors);
             }
 
-            return null;
+
+            // Check order exit or not
+            Optional<Order> existingOrder = orderRepository.findByRazorpayOrderId(orderId);
+            if (existingOrder.isEmpty()) {
+                errors.add(new FieldError("No order found", "razorpay_order_id"));
+                throw new BadRequestException("Invalid Data Provided", "No order found for the id", errors);
+            }
+            Order order = existingOrder.get();
+
+
+            // Verify payment
+            boolean isValid = razorpayService.verifyPayment(paymentId, orderId, signature);
+
+            // If successfully verified then store details to DB, update workspace, and emit event to kafka
+            if (isValid) {
+                // Change status to completed
+                order.setOrderStatus(OrderStatus.COMPLETED);
+
+
+                // update workspace
+                Optional<Workspace> existingWorkspace = workspaceRepository.findById(order.getWorkspaceId().getId());
+                if (existingWorkspace.isEmpty()) {
+                    errors.add(new FieldError("No workspace found", "workspace_id"));
+                    throw new BadRequestException("Invalid Data Provided", "No workspace found for the id", errors);
+                }
+                Workspace workspace = existingWorkspace.get();
+
+                Optional<Plan> existingPlan = planRepository.findById(order.getPlanId().getId());
+                if (existingPlan.isEmpty()) {
+                    errors.add(new FieldError("No plan found", "plan_id"));
+                    throw new BadRequestException("Invalid Data Provided", "No plan found for the id", errors);
+                }
+                Plan plan = existingPlan.get();
+
+                workspace.setType(plan.getWorkspaceType());
+                workspace.setLinkCreationLimitPerMonth(plan.getLinkCreationLimitPerMonth());
+                workspace.setMemberLimit(plan.getMemberLimit());
+                workspace.setWorkspaceStatus(WorkspaceStatus.ACTIVE);
+
+                LocalDate currentDate = LocalDate.now();
+                workspace.setLastResetDate(currentDate);
+
+                // After one month reset link created count
+                // if curr date is 2025-02-26 then next reset date will be 2025-03-26
+                workspace.setNextResetDate(currentDate.plusMonths(1));
+
+                // After the plan duration end
+                // if curr date is 2025-02-26 and plan duration is 3 month then next billing date will be 2025-05-26
+                workspace.setNextBillingDate(currentDate.plusMonths(plan.getPlanDurationMonth()));
+
+                workspaceRepository.save(workspace);
+
+
+                // Update existing order
+                order.setRazorpayPaymentId(paymentId);
+                LocalDateTime now = LocalDateTime.now();
+                order.setPaidAt(now);
+                order.setPlanStartDate(currentDate);
+                // last date of for the plan duration
+                // if curr date is 2025-02-26 and plan duration is 3 month then next end date will be 2025-05-25
+                order.setPlanEndDate(currentDate.plusMonths(plan.getPlanDurationMonth()).minusDays(1));
+                order.setOrderStatus(OrderStatus.COMPLETED);
+                Order updatedOrder = orderRepository.save(order);
+
+
+                // TODO: send updated workspace to kafka
+
+
+                return OrderMapper.maptoOrderDto(updatedOrder);
+            } else {
+                // Change status to failed
+                order.setOrderStatus(OrderStatus.PAYMENT_FAILED);
+                Order updatedOrder = orderRepository.save(order);
+
+                return OrderMapper.maptoOrderDto(updatedOrder);
+            }
         } catch (BadRequestException | ForbiddenException exception) {
             throw exception;
         } catch (Exception e) {
