@@ -1,0 +1,37 @@
+<svg
+  width="250"
+  height="60"
+  viewBox="0 0 250 60"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <!-- Blue Icon (Stylized "Q" inside a circle) -->
+  <circle cx="30" cy="30" r="20" fill="#007BFF" />
+  <path
+    d="M 30 15 Q 40 15, 40 25 T 30 35 T 20 25"
+    stroke="white"
+    stroke-width="3"
+    fill="none"
+  />
+  <line x1="35" y1="35" x2="42" y2="42" stroke="white" stroke-width="3" />
+
+  <!-- QuickShort Text -->
+  <text
+    x="60"
+    y="40"
+    font-family="Arial, sans-serif"
+    font-size="32"
+    font-weight="bold"
+    fill="black"
+    class="logo-text"
+  >
+    QuickShort
+  </text>
+
+  <!-- Dark Mode Support -->
+  <style>
+    @media (prefers-color-scheme: dark) {
+      .logo-text { fill: white; }
+    }
+  </style>
+</svg>

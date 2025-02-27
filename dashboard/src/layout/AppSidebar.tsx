@@ -25,7 +25,7 @@ const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Links",
-    path: "/"
+    path: "/",
   },
   {
     icon: <CalenderIcon />,
@@ -43,12 +43,12 @@ const othersItems: NavItem[] = [
   {
     icon: <PieChartIcon />,
     name: "Charts",
-    path: "/bar-chart"
+    path: "/bar-chart",
   },
   {
     icon: <BoxCubeIcon />,
     name: "UI Elements",
-    path: "/bar-chart"
+    path: "/bar-chart",
   },
 ];
 
@@ -253,33 +253,33 @@ const AppSidebar: React.FC = () => {
           !isExpanded ? "lg:justify-center" : "justify-start"
         }`}
       >
-        {/* <Link to="/">
+        <Link to="/">
           {isExpanded || isMobileOpen ? (
             <>
               <img
                 className="dark:hidden"
                 src="/images/logo/logo.svg"
                 alt="Logo"
-                width={150}
-                height={40}
+                width={200}
+                // height={40}
               />
               <img
                 className="hidden dark:block"
                 src="/images/logo/logo-dark.svg"
                 alt="Logo"
-                width={150}
-                height={40}
+                width={200}
+                // height={40}
               />
             </>
           ) : (
             <img
               src="/images/logo/logo-icon.svg"
               alt="Logo"
-              width={32}
-              height={32}
+              width={50}
+              // height={50}
             />
           )}
-        </Link> */}
+        </Link>
       </div>
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
         <nav className="mb-6">
