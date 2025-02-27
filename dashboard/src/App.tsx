@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import DashboardLayout from "./layout/DashboardLayout";
 
 // Public routes
-import Signin from "./pages/AuthPages/SignIn";
+import Signin from "./pages/AuthPages/Signin";
 
 // Protected routes
 import Home from "./pages/Home";

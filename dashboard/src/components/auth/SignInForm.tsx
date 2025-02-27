@@ -1,14 +1,105 @@
 import { useState } from "react";
-import { Link } from "react-router";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
+import { Link, useNavigate } from "react-router-dom";
+import { EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
-import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
+import axios from "axios";
+import { useDispatch } from "react-redux";
+import { login } from "../../redux/authSlice";
+import { SuccessApiResponse } from "../../helper/SuccessApiResponse";
+import { ErrorApiResponse } from "../../helper/ErrorApiResponse";
+import toast from "react-hot-toast";
+
+type ErrorField = {
+  error: boolean;
+  message?: string;
+};
+interface ErrorInterce {
+  email: ErrorField;
+  password: ErrorField;
+}
+
+interface DataInterface {
+  email: string;
+  password: string;
+}
+
+interface SigninResponseData extends SuccessApiResponse {
+  data: { token: string };
+}
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
+  const [data, setData] = useState<DataInterface>({
+    email: "",
+    password: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<ErrorInterce>({
+    email: {
+      error: false,
+    },
+    password: {
+      error: false,
+    },
+  });
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setData((prevData) => ({
+      ...prevData,
+      [e.target.name]: e.target.value,
+    }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [e.target.name]: { error: false, message: "" },
+    }));
+  };
+
+  // Function to handle login request
+  const handleLogin = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const API_BASE_URL = import.meta.env.VITE_AUTHENTICATION_BACKEND_BASE_URL;
+      const response = await axios.post<SigninResponseData>(
+        `${API_BASE_URL}/signin`,
+        data
+      );
+
+      // Dispatch token
+      dispatch(login(response.data.data.token));
+
+      // Redirect to / home route
+      navigate("/", { replace: true });
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response) {
+        const errorData: ErrorApiResponse = err.response.data;
+        const errorsInfo = errorData.errors;
+
+        errorsInfo.map((info) => {
+          // If error has field then set that to erroe
+          if (info.field && info.field.length > 0) {
+            setErrors((prev) => ({
+              ...prev,
+              [`${info.field}`]: { error: true, message: info.message },
+            }));
+          }
+        });
+
+        toast.error(errorData.message);
+      } else {
+        console.error("Unexpected error:", err);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col flex-1">
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
@@ -21,8 +112,10 @@ export default function SignInForm() {
               Enter your email and password to sign in!
             </p>
           </div>
+
           <div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
+              {/* Sign in with Google */}
               <button className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
                 <svg
                   width="20"
@@ -50,6 +143,8 @@ export default function SignInForm() {
                 </svg>
                 Sign in with Google
               </button>
+
+              {/* Sign in with X */}
               <button className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
                 <svg
                   width="21"
@@ -64,6 +159,7 @@ export default function SignInForm() {
                 Sign in with X
               </button>
             </div>
+
             <div className="relative py-3 sm:py-5">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
@@ -74,16 +170,26 @@ export default function SignInForm() {
                 </span>
               </div>
             </div>
-            
-            <form>
-              <div className="space-y-6">
 
+            <form>
+              <div className="space-y-3">
                 {/* Email */}
                 <div>
                   <Label>
                     Email <span className="text-error-500">*</span>{" "}
                   </Label>
-                  <Input placeholder="info@gmail.com" />
+                  <Input
+                    placeholder="info@gmail.com"
+                    name="email"
+                    value={data.email}
+                    onChange={(e) => handleChange(e)}
+                    error={errors.email.error}
+                  />
+                  {errors.email.error && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.email.message}
+                    </p>
+                  )}
                 </div>
 
                 {/* password */}
@@ -95,6 +201,10 @@ export default function SignInForm() {
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
+                      name="password"
+                      value={data.password}
+                      onChange={(e) => handleChange(e)}
+                      error={errors.password.error}
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -107,6 +217,11 @@ export default function SignInForm() {
                       )}
                     </span>
                   </div>
+                  {errors.password.error && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.password.message}
+                    </p>
+                  )}
                 </div>
 
                 {/* Forgot password */}
@@ -121,7 +236,13 @@ export default function SignInForm() {
 
                 {/* Sign in button */}
                 <div>
-                  <Button className="w-full" size="sm">
+                  <Button
+                    className="w-full"
+                    size="sm"
+                    onClick={(e) => {
+                      handleLogin(e);
+                    }}
+                  >
                     Sign in
                   </Button>
                 </div>

@@ -100,22 +100,34 @@ public class UserServiceImpl implements UserService {
         return payload;
     }
 
-    // TODO: Add data validation
+    // TODO: Add data validation email format, password length condition
     @Override
     public String verifyUser(UserDto userDto) {
         try {
+
+            List<FieldError> errors = new ArrayList<>();
+            if (userDto.getEmail() == null || userDto.getEmail().isEmpty()) {
+                errors.add(new FieldError("Email is required", "email"));
+            }
+            if (userDto.getPassword() == null || userDto.getPassword().isEmpty()) {
+                errors.add(new FieldError("Password is required", "password"));
+            }
+            if (!errors.isEmpty()) {
+                throw new BadRequestException("Provide all details", "Please provide all details", errors);
+            }
+
             User user = userRepository.findByEmail(userDto.getEmail());
 
             // If user not found with the email then throw bad request exception
             if (user == null) {
-                List<FieldError> errors = new ArrayList<>();
+                errors = new ArrayList<>();
                 errors.add(new FieldError("Invalid Email or Password"));
                 throw new BadRequestException("Invalid Credentials", "Invalid Email or Password", errors);
             }
 
             // If wrong password is provided then throw bad request exception
             if (!passwordEncoderDecoder.verifyPassword(userDto.getPassword(), user.getPassword())) {
-                List<FieldError> errors = new ArrayList<>();
+                errors = new ArrayList<>();
                 errors.add(new FieldError("Invalid Email or Password"));
                 throw new BadRequestException("Invalid Credentials", "Invalid Email or Password", errors);
             }

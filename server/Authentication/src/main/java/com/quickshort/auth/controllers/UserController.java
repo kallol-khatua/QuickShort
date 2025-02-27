@@ -18,7 +18,7 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/register")
+    @PostMapping(value = {"/register", "/register/"})
     public ResponseEntity<SuccessApiResponse<UserDto>> registerUser(@RequestBody UserDto user) {
         // Register user
         UserDto registeredUser = userService.registerUser(user);
@@ -36,8 +36,12 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<SuccessApiResponse<HashMap<String, String>>> loginUser(@RequestBody UserDto user) {
+    @PostMapping(value = {"/signin", "/signin/"})
+    public ResponseEntity<SuccessApiResponse<HashMap<String, String>>> loginUser(@RequestBody(required = false) UserDto user) {
+        if (user == null) {
+            user = new UserDto();
+        }
+
         // Generate token
         String token = userService.verifyUser(user);
 
