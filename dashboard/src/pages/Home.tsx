@@ -12,19 +12,9 @@ const Home: React.FC = () => {
   const currentWorkspace = useSelector(
     (state: RootState) => state.workspace.currentWorkspace
   );
-  console.log(workspaces);
-
-  // workspaces.map((workspace) => {
-  //   // console.log(workspace.workspaceId.name);
-  //   // console.log(workspace.workspaceId.type);
-  //   if (!currentWorkspace) {
-  //     dispatch(setCurrentWorkspace(workspace));
-  //   }
-  // });
 
   useEffect(() => {
     if (!currentWorkspace && workspaces.length > 0) {
-      console.log(currentWorkspace)
       dispatch(setCurrentWorkspace(workspaces[0])); // Set first workspace as default
     }
   }, [currentWorkspace, workspaces, dispatch]);
