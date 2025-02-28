@@ -5,6 +5,7 @@ import { useSidebar } from "../hooks/useSidebar";
 import AppHeader from "./AppHeader";
 import AppSidebar from "./AppSidebar";
 import ProtectedRoute from "./ProtectedRoute";
+import WorkpaceLoader from "../components/WorkpaceLoader";
 
 const LayoutContent: React.FC = () => {
   const { isExpanded, isMobileOpen } = useSidebar();
@@ -32,9 +33,11 @@ const LayoutContent: React.FC = () => {
 const DashboardLayout: React.FC = () => {
   return (
     <ProtectedRoute>
-      <SidebarProvider>
-        <LayoutContent />
-      </SidebarProvider>
+      <WorkpaceLoader>
+        <SidebarProvider>
+          <LayoutContent />
+        </SidebarProvider>
+      </WorkpaceLoader>
     </ProtectedRoute>
   );
 };

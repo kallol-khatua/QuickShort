@@ -60,8 +60,7 @@ export default function SignInForm() {
   };
 
   // Function to handle login request
-  const handleLogin = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    e.preventDefault();
+  const handleLogin = async () => {
     setLoading(true);
 
     try {
@@ -171,83 +170,81 @@ export default function SignInForm() {
               </div>
             </div>
 
-            <form>
-              <div className="space-y-3">
-                {/* Email */}
-                <div>
-                  <Label>
-                    Email <span className="text-error-500">*</span>{" "}
-                  </Label>
+            <div className="space-y-3">
+              {/* Email */}
+              <div>
+                <Label>
+                  Email <span className="text-error-500">*</span>{" "}
+                </Label>
+                <Input
+                  placeholder="info@gmail.com"
+                  name="email"
+                  value={data.email}
+                  onChange={(e) => handleChange(e)}
+                  error={errors.email.error}
+                />
+                {errors.email.error && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.email.message}
+                  </p>
+                )}
+              </div>
+
+              {/* password */}
+              <div>
+                <Label>
+                  Password <span className="text-error-500">*</span>{" "}
+                </Label>
+                <div className="relative">
                   <Input
-                    placeholder="info@gmail.com"
-                    name="email"
-                    value={data.email}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    name="password"
+                    value={data.password}
                     onChange={(e) => handleChange(e)}
-                    error={errors.email.error}
+                    error={errors.password.error}
                   />
-                  {errors.email.error && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.email.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* password */}
-                <div>
-                  <Label>
-                    Password <span className="text-error-500">*</span>{" "}
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      name="password"
-                      value={data.password}
-                      onChange={(e) => handleChange(e)}
-                      error={errors.password.error}
-                    />
-                    <span
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
-                    >
-                      {showPassword ? (
-                        <EyeIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
-                      ) : (
-                        <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
-                      )}
-                    </span>
-                  </div>
-                  {errors.password.error && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errors.password.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Forgot password */}
-                <div className="flex items-center justify-end">
-                  <Link
-                    to="/reset-password"
-                    className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                  <span
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
                   >
-                    Forgot password?
-                  </Link>
+                    {showPassword ? (
+                      <EyeIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
+                    ) : (
+                      <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
+                    )}
+                  </span>
                 </div>
+                {errors.password.error && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.password.message}
+                  </p>
+                )}
+              </div>
 
-                {/* Sign in button */}
-                <div>
-                  <Button
-                    className="w-full"
-                    size="sm"
-                    onClick={(e) => {
-                      handleLogin(e);
-                    }}
-                  >
+              {/* Forgot password */}
+              <div className="flex items-center justify-end">
+                <Link
+                  to="/reset-password"
+                  className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+
+              {/* Sign in button */}
+              <div>
+                {loading ? (
+                  <Button className="w-full" size="sm">
+                    Submitting
+                  </Button>
+                ) : (
+                  <Button className="w-full" size="sm" onClick={handleLogin}>
                     Sign in
                   </Button>
-                </div>
+                )}
               </div>
-            </form>
+            </div>
 
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">

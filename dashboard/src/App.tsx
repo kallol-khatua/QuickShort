@@ -8,6 +8,7 @@ import Signin from "./pages/AuthPages/Signin";
 
 // Protected routes
 import Home from "./pages/Home";
+import ProtectedRoutePages from "./pages/ProtectedRoutePages";
 
 function App() {
   return (
@@ -15,9 +16,17 @@ function App() {
       <Router>
         {/* <ScrollToTop /> */}
         <Routes>
+          <Route path="/error" element={<div>error page</div>} />
+
+          {/* Protected routes */}
+          <Route element={<ProtectedRoutePages />}>
+            <Route path="/onbording" element=<div>skds</div> />
+          </Route>
+
           {/* Dashboard Layout */}
           <Route element={<DashboardLayout />}>
             <Route index path="/" element={<Home />} />
+            <Route path="/:workspaceId" element={<Home />} />
           </Route>
 
           {/* Auth Layout */}

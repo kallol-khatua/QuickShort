@@ -8,6 +8,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  
   const isAuthenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated
   );
