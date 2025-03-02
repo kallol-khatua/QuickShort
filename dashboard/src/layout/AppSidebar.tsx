@@ -1,16 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
 // Assume these icons are imported from an icon library
-import {
-  BoxCubeIcon,
-  CalenderIcon,
-  ChevronDownIcon,
-  GridIcon,
-  HorizontaLDots,
-  PieChartIcon,
-  UserCircleIcon,
-} from "../icons";
+import { BoxCubeIcon, CalenderIcon, GridIcon, HorizontaLDots } from "../icons";
 import { useSidebar } from "../hooks/useSidebar";
 // import SidebarWidget from "./SidebarWidget";
 import { RootState } from "../redux/store";
@@ -42,17 +34,19 @@ const ownerOptions: NavItem[] = [
   {
     icon: <BoxCubeIcon />,
     name: "Settings",
-    path: "/bar-chart",
+    path: "/settings",
   },
 ];
 
 const WorkspacesDropdown = () => {
+  const { workspaceId } = useParams();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const dispatch = useDispatch();
   //   name: "kallol",
   //   free: true,
   // });
-
+  const navigate = useNavigate();
+  const location = useLocation();
   const currentWorkspace = useSelector(
     (state: RootState) => state.workspace.currentWorkspace
   );
@@ -88,6 +82,14 @@ const WorkspacesDropdown = () => {
   const handleWorksapceChange = (workspace: WorkspaceMember) => {
     dispatch(setCurrentWorkspace(workspace));
     setIsOpen(false);
+    if (workspaceId) {
+      // Replace the ID only
+      const newPath = location.pathname.replace(
+        workspaceId,
+        workspace.workspaceId.id
+      );
+      navigate(newPath);
+    }
   };
 
   return (
@@ -247,14 +249,16 @@ const AppSidebar: React.FC = () => {
         <li key={nav.name}>
           {nav.path && (
             <Link
-              to={nav.path}
+              to={currentWorkspace?.workspaceId.id + nav.path}
               className={`menu-item group ${
-                isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                isActive(`/${currentWorkspace?.workspaceId.id}${nav.path}`)
+                  ? "menu-item-active"
+                  : "menu-item-inactive"
               }`}
             >
               <span
                 className={`menu-item-icon-size ${
-                  isActive(nav.path)
+                  isActive(`/${currentWorkspace?.workspaceId.id}${nav.path}`)
                     ? "menu-item-icon-active"
                     : "menu-item-icon-inactive"
                 }`}

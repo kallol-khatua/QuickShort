@@ -9,6 +9,7 @@ import Signin from "./pages/AuthPages/Signin";
 // Protected routes
 import Home from "./pages/Home";
 import ProtectedRoutePages from "./pages/ProtectedRoutePages";
+import LinksPage from "./pages/Links/LinksPage";
 
 function App() {
   return (
@@ -26,7 +27,11 @@ function App() {
           {/* Dashboard Layout */}
           <Route element={<DashboardLayout />}>
             <Route index path="/" element={<Home />} />
-            <Route path="/:workspaceId" element={<Home />} />
+            {/* <Route element={<DashboardLayout />}> */}
+              <Route index path="/:workspaceId/" element={<LinksPage />} />
+              <Route path="/:workspaceId/analytics" element={<Signin />} />
+              <Route path="/:workspaceId/settings" element={<Signin />} />
+            {/* </Route> */}
           </Route>
 
           {/* Auth Layout */}

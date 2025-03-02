@@ -21,7 +21,7 @@ const Home: React.FC = () => {
 
   return (
     currentWorkspace !== null && (
-      <Navigate to={`/${currentWorkspace.workspaceId.id}`} />
+      <Navigate to={`/${currentWorkspace.workspaceId.id}/`} />
     )
   );
 };

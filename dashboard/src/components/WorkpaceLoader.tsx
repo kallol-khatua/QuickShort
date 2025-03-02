@@ -13,18 +13,11 @@ import {
 import toast from "react-hot-toast";
 import { logout } from "../redux/authSlice";
 import { Navigate, useNavigate } from "react-router-dom";
+import RotatingLoader from "./ui/loader/RotatingLoader";
 
 interface WorkspaceResponseData extends SuccessApiResponse {
   data: WorkspaceMember[];
 }
-
-const Loader: React.FC = () => {
-  return (
-    <div>
-      <h1>loading...</h1>
-    </div>
-  );
-};
 
 // Check workspace are empty or not
 // if empty then redirect to onbording page
@@ -84,7 +77,9 @@ const WorkpaceLoader: React.FC<{ children: React.ReactNode }> = ({
   return isLoaded ? (
     <ChildComponentProvider>{children}</ChildComponentProvider>
   ) : (
-    <Loader />
+    <div className="w-full h-full min-h-screen flex items-center justify center">
+      <RotatingLoader />
+    </div>
   );
 };
 
