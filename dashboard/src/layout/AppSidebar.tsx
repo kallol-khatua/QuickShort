@@ -7,8 +7,9 @@ import { useSidebar } from "../hooks/useSidebar";
 // import SidebarWidget from "./SidebarWidget";
 import { RootState } from "../redux/store";
 import { useDispatch, useSelector } from "react-redux";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronDown, Check, ChevronDownIcon } from "lucide-react";
 import { setCurrentWorkspace, WorkspaceMember } from "../redux/workspaceSlice";
+import CreateWorkspace from "./CreateWorkspace";
 
 type NavItem = {
   name: string;
@@ -34,7 +35,11 @@ const ownerOptions: NavItem[] = [
   {
     icon: <BoxCubeIcon />,
     name: "Settings",
-    path: "/settings",
+    // path: "/settings",
+    subItems: [
+      { name: "Billing", path: "/settings/billing" },
+      { name: "domain", path: "/settings/" },
+    ],
   },
 ];
 
@@ -54,6 +59,8 @@ const WorkspacesDropdown = () => {
   const workspaces = useSelector(
     (state: RootState) => state.workspace.workspaces
   );
+  const [isCreateWorkspaceModalOpen, setIsCreateWorkspaceModalOpen] =
+    useState<boolean>(false);
 
   // console.log(currentWorkspace);
 
@@ -92,6 +99,11 @@ const WorkspacesDropdown = () => {
     }
   };
 
+  const handleWorksapceCreateModalToggle = () => {
+    setIsCreateWorkspaceModalOpen((prev) => !prev);
+    setIsOpen(false);
+  };
+
   return (
     <div className="relative mb-2" ref={dropdownRef}>
       {/* Selected Workspace Button */}
@@ -122,48 +134,65 @@ const WorkspacesDropdown = () => {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute mt-2 w-full bg-white shadow-lg rounded-lg py-2 z-50 dark:shadow-lg dark:bg-black dark:text-gray-300 ">
+        <div className="absolute mt-2 bg-gray-100 w-full shadow-lg rounded-lg py-2 z-50 dark:shadow-lg dark:bg-gray-800 dark:text-gray-300">
           <div className="px-4 py-2 text-sm text-gray-900 dark:text-white">
             Workspaces
           </div>
-          {workspaces.map((workspace) => (
-            <button
-              key={workspace.workspaceId.name}
-              className={`flex items-center justify-between w-full px-4 py-2 text-sm ${
-                currentWorkspace?.workspaceId.name ===
-                workspace.workspaceId.name
-                  ? "bg-gray-200 dark:bg-gray-700"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-500"
-              }`}
-              onClick={() => {
-                handleWorksapceChange(workspace);
-              }}
-            >
-              <div className="flex items-center gap-2 w-full overflow-hidden">
-                <div className="w-8 h-8 flex items-center justify-center bg-pink-500 text-white rounded-full shrink-0">
-                  {workspace.workspaceId.name.charAt(0).toUpperCase()}
+          <div
+            className={`${
+              workspaces.length > 4
+                ? "max-h-48 overflow-y-auto custom-scrollbar"
+                : ""
+            }`}
+          >
+            {workspaces.map((workspace) => (
+              <button
+                key={workspace.workspaceId.id}
+                className={`flex items-center justify-between w-full px-4 py-2 text-sm ${
+                  currentWorkspace?.workspaceId.id === workspace.workspaceId.id
+                    ? "bg-gray-200 dark:bg-gray-700"
+                    : "hover:bg-gray-200 dark:hover:bg-gray-500"
+                }`}
+                onClick={() => {
+                  handleWorksapceChange(workspace);
+                }}
+              >
+                <div className="flex items-center gap-2 w-full overflow-hidden">
+                  <div className="w-8 h-8 flex items-center justify-center bg-pink-500 text-white rounded-full shrink-0">
+                    {workspace.workspaceId.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex flex-col overflow-hidden">
+                    <p className="text-sm font-medium truncate w-full text-start">
+                      {workspace?.workspaceId.name}
+                    </p>
+                    <p className="text-xs text-gray-400 truncate w-full text-start">
+                      {workspace?.workspaceId.type}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex flex-col overflow-hidden">
-                  <p className="text-sm font-medium truncate w-full text-start">
-                    {workspace?.workspaceId.name}
-                  </p>
-                  <p className="text-xs text-gray-500 truncate w-full text-start">
-                    {workspace?.workspaceId.type}
-                  </p>
-                </div>
-              </div>
-              {currentWorkspace?.workspaceId.name ===
-                workspace.workspaceId.name && (
-                <Check className="w-4 h-4 text-gray-700" />
-              )}
-            </button>
-          ))}
+                {currentWorkspace?.workspaceId.id ===
+                  workspace.workspaceId.id && (
+                  <Check className="w-4 h-4 text-gray-700 dark:text-white" />
+                )}
+              </button>
+            ))}
+          </div>
 
           {/* Create New Workspace Option */}
-          <button className="w-full px-4 py-2 text-sm text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700">
+          <button
+            className="w-full px-4 py-2 text-sm text-blue-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+            onClick={handleWorksapceCreateModalToggle}
+          >
             + Create new workspace
           </button>
         </div>
+      )}
+
+      {isCreateWorkspaceModalOpen && (
+        <CreateWorkspace
+          handleWorksapceCreateModalToggle={handleWorksapceCreateModalToggle}
+          isCreateWorkspaceModalOpen={isCreateWorkspaceModalOpen}
+        />
       )}
     </div>
   );
@@ -177,6 +206,15 @@ const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen } = useSidebar();
   const location = useLocation();
 
+  const [openSubmenu, setOpenSubmenu] = useState<{
+    type: "main" | "others";
+    index: number;
+  } | null>(null);
+  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
+    {}
+  );
+  const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
   // const [openSubmenu, setOpenSubmenu] = useState<{
   //   type: "general" | "owner";
   //   index: number;
@@ -186,94 +224,68 @@ const AppSidebar: React.FC = () => {
   // );
   // const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // const isActive = (path: string) => location.pathname === path;
   const isActive = useCallback(
     (path: string) => location.pathname === path,
     [location.pathname]
   );
 
   useEffect(() => {
-    // let submenuMatched = false;
+    let submenuMatched = false;
+
     ["main", "others"].forEach((menuType) => {
       const items = menuType === "main" ? generalOptions : ownerOptions;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
-            if (isActive(subItem.path)) {
-              // setOpenSubmenu({
-              //   type: menuType as "general" | "owner",
-              //   index,
-              // });
-              // submenuMatched = true;
+            if (isActive(currentWorkspace?.workspaceId.id + subItem.path)) {
+              setOpenSubmenu({
+                type: menuType as "main" | "others",
+                index,
+              });
+              submenuMatched = true;
             }
           });
         }
       });
     });
 
-    // if (!submenuMatched) {
-    //   setOpenSubmenu(null);
-    // }
-  }, [location, isActive]);
+    if (!submenuMatched) {
+      setOpenSubmenu(null);
+    }
+  }, [location, isActive, currentWorkspace?.workspaceId.id]);
 
-  // useEffect(() => {
-  //   if (openSubmenu !== null) {
-  //     const key = `${openSubmenu.type}-${openSubmenu.index}`;
-  //     if (subMenuRefs.current[key]) {
-  //       setSubMenuHeight((prevHeights) => ({
-  //         ...prevHeights,
-  //         [key]: subMenuRefs.current[key]?.scrollHeight || 0,
-  //       }));
-  //     }
-  //   }
-  // }, [openSubmenu]);
+  useEffect(() => {
+    if (openSubmenu !== null) {
+      const key = `${openSubmenu.type}-${openSubmenu.index}`;
+      if (subMenuRefs.current[key]) {
+        setSubMenuHeight((prevHeights) => ({
+          ...prevHeights,
+          [key]: subMenuRefs.current[key]?.scrollHeight || 0,
+        }));
+      }
+    }
+  }, [openSubmenu]);
 
-  // const handleSubmenuToggle = (index: number, menuType: "general" | "owner") => {
-  //   setOpenSubmenu((prevOpenSubmenu) => {
-  //     if (
-  //       prevOpenSubmenu &&
-  //       prevOpenSubmenu.type === menuType &&
-  //       prevOpenSubmenu.index === index
-  //     ) {
-  //       return null;
-  //     }
-  //     return { type: menuType, index };
-  //   });
-  // };
+  const handleSubmenuToggle = (index: number, menuType: "main" | "others") => {
+    setOpenSubmenu((prevOpenSubmenu) => {
+      if (
+        prevOpenSubmenu &&
+        prevOpenSubmenu.type === menuType &&
+        prevOpenSubmenu.index === index
+      ) {
+        return null;
+      }
+      return { type: menuType, index };
+    });
+  };
 
-  // render items
-  // const renderMenuItems = (items: NavItem[], menuType: "general" | "owner") => (
-  const renderMenuItems = (items: NavItem[]) => (
+  const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
     <ul className="flex flex-col gap-4">
-      {items.map((nav) => (
+      {items.map((nav, index) => (
         <li key={nav.name}>
-          {nav.path && (
-            <Link
-              to={currentWorkspace?.workspaceId.id + nav.path}
-              className={`menu-item group ${
-                isActive(`/${currentWorkspace?.workspaceId.id}${nav.path}`)
-                  ? "menu-item-active"
-                  : "menu-item-inactive"
-              }`}
-            >
-              <span
-                className={`menu-item-icon-size ${
-                  isActive(`/${currentWorkspace?.workspaceId.id}${nav.path}`)
-                    ? "menu-item-icon-active"
-                    : "menu-item-icon-inactive"
-                }`}
-              >
-                {nav.icon}
-              </span>
-              {(isExpanded || isMobileOpen) && (
-                <span className="menu-item-text">{nav.name}</span>
-              )}
-            </Link>
-          )}
-
-          {/* {nav.subItems ? (
+          {nav.subItems ? (
             <button
-              // onClick={() => handleSubmenuToggle(index, menuType)}
+              onClick={() => handleSubmenuToggle(index, menuType)}
               className={`menu-item group ${
                 openSubmenu?.type === menuType && openSubmenu?.index === index
                   ? "menu-item-active"
@@ -308,14 +320,16 @@ const AppSidebar: React.FC = () => {
           ) : (
             nav.path && (
               <Link
-                to={nav.path}
+                to={currentWorkspace?.workspaceId.id + nav.path}
                 className={`menu-item group ${
-                  isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                  isActive(`/${currentWorkspace?.workspaceId.id}${nav.path}`)
+                    ? "menu-item-active"
+                    : "menu-item-inactive"
                 }`}
               >
                 <span
                   className={`menu-item-icon-size ${
-                    isActive(nav.path)
+                    isActive(`/${currentWorkspace?.workspaceId.id}${nav.path}`)
                       ? "menu-item-icon-active"
                       : "menu-item-icon-inactive"
                   }`}
@@ -328,6 +342,7 @@ const AppSidebar: React.FC = () => {
               </Link>
             )
           )}
+
           {nav.subItems && (isExpanded || isMobileOpen) && (
             <div
               ref={(el) => {
@@ -345,9 +360,11 @@ const AppSidebar: React.FC = () => {
                 {nav.subItems.map((subItem) => (
                   <li key={subItem.name}>
                     <Link
-                      to={subItem.path}
+                      to={currentWorkspace?.workspaceId.id + subItem.path}
                       className={`menu-dropdown-item ${
-                        isActive(subItem.path)
+                        isActive(
+                          `/${currentWorkspace?.workspaceId.id}${subItem.path}`
+                        )
                           ? "menu-dropdown-item-active"
                           : "menu-dropdown-item-inactive"
                       }`}
@@ -357,23 +374,14 @@ const AppSidebar: React.FC = () => {
                         {subItem.new && (
                           <span
                             className={`ml-auto ${
-                              isActive(subItem.path)
+                              isActive(
+                                `/${currentWorkspace?.workspaceId.id}${subItem.path}`
+                              )
                                 ? "menu-dropdown-badge-active"
                                 : "menu-dropdown-badge-inactive"
                             } menu-dropdown-badge`}
                           >
                             new
-                          </span>
-                        )}
-                        {subItem.pro && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
-                          >
-                            pro
                           </span>
                         )}
                       </span>
@@ -382,7 +390,7 @@ const AppSidebar: React.FC = () => {
                 ))}
               </ul>
             </div>
-          )} */}
+          )}
         </li>
       ))}
     </ul>
@@ -467,7 +475,7 @@ const AppSidebar: React.FC = () => {
                         <HorizontaLDots className="size-6" />
                       )}
                     </h2>
-                    {renderMenuItems(generalOptions)}
+                    {renderMenuItems(generalOptions, "main")}
                   </div>
 
                   {/* Owner options */}
@@ -484,14 +492,11 @@ const AppSidebar: React.FC = () => {
                           <HorizontaLDots className="size-6" />
                         )}
                       </h2>
-                      {renderMenuItems(ownerOptions)}
+                      {renderMenuItems(ownerOptions, "others")}
                     </div>
                   )}
                 </div>
               </nav>
-              {/* {isExpanded || isMobileOpen
-            ? currentWorkspace.workspaceId.type !== "FREE" && <SidebarWidget />
-            : null} */}
             </div>
           </div>
 
@@ -518,9 +523,11 @@ const AppSidebar: React.FC = () => {
 
               {/* Fixed Button at Bottom */}
               {currentWorkspace.workspaceId.type === "FREE" && (
-                <button className="w-full mt-4 py-2 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 dark:bg-white dark:text-black">
-                  Get QuickShort Pro
-                </button>
+                <Link to={`${currentWorkspace.workspaceId.id}/upgrade`}>
+                  <button className="w-full mt-4 py-2 bg-black text-white font-semibold rounded-lg hover:bg-gray-800 dark:bg-white dark:text-black">
+                    Get QuickShort Pro
+                  </button>
+                </Link>
               )}
             </div>
           )}

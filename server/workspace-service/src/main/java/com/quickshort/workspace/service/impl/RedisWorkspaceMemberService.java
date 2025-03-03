@@ -33,6 +33,6 @@ public class RedisWorkspaceMemberService {
         ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
 
         // Cache result with TTL (e.g., 10 minutes)
-        valueOperations.set(cacheKey + user.getId().toString(), workspaceMemberDtoList, 40, TimeUnit.SECONDS);
+        valueOperations.set(cacheKey + user.getId().toString(), workspaceMemberDtoList, 10, TimeUnit.SECONDS);
     }
 }

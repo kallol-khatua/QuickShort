@@ -3,6 +3,40 @@ layer(base);
 
 @import "tailwindcss";
 
+/* hide scroll bar */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: 2px;
+}
+
+/* dark and light mode in scrollbar */
+/* Light mode - hidden scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  /* width: 0px;
+  height: 0px; */
+}
+
+/* Dark mode - styled scrollbar */
+.dark .custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #555; /* Dark gray thumb */
+  border-radius: 6px;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #888; /* Lighter gray on hover */
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+  background-color: #222; /* Darker track */
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme {

@@ -3,10 +3,7 @@ package com.quickshort.payment.service.impl;
 import com.quickshort.common.enums.WorkspaceStatus;
 import com.quickshort.common.enums.WorkspaceType;
 import com.quickshort.common.events.WorkspaceTypeUpgradationEvent;
-import com.quickshort.common.exception.BadRequestException;
-import com.quickshort.common.exception.FieldError;
-import com.quickshort.common.exception.ForbiddenException;
-import com.quickshort.common.exception.InternalServerErrorException;
+import com.quickshort.common.exception.*;
 import com.quickshort.common.payload.WorkspacePayload;
 import com.quickshort.payment.dto.OrderDto;
 import com.quickshort.payment.enums.OrderStatus;
@@ -89,10 +86,11 @@ public class OrderServiceImpl implements OrderService {
             // Allow to upgrade only for free type
             if (workspace.getType() != WorkspaceType.FREE) {
                 errors.add(new FieldError("Already Upgraded To Premium Plans", "workspace_id"));
-                throw new BadRequestException("Already Upgraded To Premium Plans", "Repeat existing plan of choose another one", errors);
+                throw new MethodNotAllowedException("Already Upgraded To Premium Plans", "Renew Subscription", errors);
             }
 
 
+            // TODO: handle at frontend
             // If order is already created when status is awaiting payment then return the already created order
             Optional<Order> existingOrder = orderRepository.findByWorkspaceIdAndOrderStatus(workspace, OrderStatus.AWAITING_PAYMENT);
             if (existingOrder.isPresent()) {
@@ -115,7 +113,7 @@ public class OrderServiceImpl implements OrderService {
 
             // Return the order
             return OrderMapper.maptoOrderDto(savedOrder);
-        } catch (BadRequestException | ForbiddenException exception) {
+        } catch (BadRequestException | ForbiddenException | MethodNotAllowedException exception) {
             throw exception;
         } catch (Exception e) {
             LOGGER.error("Unexpected error while creating order", e);

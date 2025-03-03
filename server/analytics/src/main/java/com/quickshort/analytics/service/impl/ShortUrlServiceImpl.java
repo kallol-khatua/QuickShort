@@ -113,14 +113,6 @@ public class ShortUrlServiceImpl implements ShortUrlService {
             }
 
 
-            // If url is expired then not allow
-            if (isExpired(shortUrl)) {
-                List<FieldError> errors = new ArrayList<>();
-                errors.add(new FieldError("Url is expired", "short_code"));
-                throw new BadRequestException("Invalid Data Provided", "Url is expired", errors);
-            }
-
-
             // If url not present in cache then cache the url
             if (urlInCache == null) {
                 redisShortUrlService.addToCache(shortCode, shortUrl);
@@ -131,7 +123,7 @@ public class ShortUrlServiceImpl implements ShortUrlService {
             ClickTracking clickTracking = userAgentService.getClientInfo(request);
             clickTracking.setShortUrl(shortUrl);
             ClickTracking savedTracking = clickTrackingRepository.save(clickTracking);
-            LOGGER.info("Tracking saved -> {}", savedTracking);
+            LOGGER.info("Tracking saved -> {}", shortCode);
 
 
             return ShortUrlMapper.mapToShortUrlDto(shortUrl);
@@ -143,11 +135,5 @@ public class ShortUrlServiceImpl implements ShortUrlService {
             errors.add(new FieldError("Internal Server Error"));
             throw new InternalServerErrorException("Internal Server Error", "Internal Server Error", errors);
         }
-    }
-
-
-    // TODO: Check is expired
-    private boolean isExpired(ShortUrl shortUrl) {
-        return false;
     }
 }

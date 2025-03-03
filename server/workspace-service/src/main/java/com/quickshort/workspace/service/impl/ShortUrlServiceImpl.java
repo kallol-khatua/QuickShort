@@ -108,7 +108,7 @@ public class ShortUrlServiceImpl implements ShortUrlService {
             // Check link creation limit, if exceed then do not allow to create link
             if (workspace.getCreatedLinksThisMonth() >= workspace.getLinkCreationLimitPerMonth()) {
                 errors.add(new FieldError("Can not create new link this month"));
-                throw new TooManyRequest("Link Creation Limit Exceed", "Can not create new link this month", errors);
+                throw new TooManyRequest("Link Creation Limit Exceed", "Limit Exceed: Can not create new link this month", errors);
             }
 
 

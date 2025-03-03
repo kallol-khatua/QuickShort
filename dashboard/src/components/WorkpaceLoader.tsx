@@ -47,8 +47,10 @@ const WorkpaceLoader: React.FC<{ children: React.ReactNode }> = ({
           const response =
             await axiosWorkspaceInstance.get<WorkspaceResponseData>("/");
 
-          dispatch(setWorkspaces(response.data.data));
-          dispatch(setIsLoaded(true));
+          setTimeout(() => {
+            dispatch(setWorkspaces(response.data.data));
+            dispatch(setIsLoaded(true));
+          }, 250);
         } catch (err: unknown) {
           //   console.log(err);
 

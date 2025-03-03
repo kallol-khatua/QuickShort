@@ -10,7 +10,5 @@ import java.util.UUID;
 public interface WorkspaceService {
     WorkspaceDto createWorkspace(WorkspaceDto workspaceDto);
 
-    WorkspaceDto updateWorkspace(UUID workspaceId, WorkspaceDto workspaceDto);
-
     Workspace workspaceTypeUpgrade(WorkspacePayload payload);
 }

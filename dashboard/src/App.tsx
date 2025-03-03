@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 // Layouts
 import DashboardLayout from "./layout/DashboardLayout";
+import { ScrollToTop } from "./components/common/ScrollToTop";
 
 // Public routes
 import Signin from "./pages/AuthPages/Signin";
@@ -10,12 +11,14 @@ import Signin from "./pages/AuthPages/Signin";
 import Home from "./pages/Home";
 import ProtectedRoutePages from "./pages/ProtectedRoutePages";
 import LinksPage from "./pages/Links/LinksPage";
+import CurrentWorkspacehandler from "./components/CurrentWorkspaceHandler";
+import Upgrade from "./pages/Payments/Upgrade";
 
 function App() {
   return (
     <>
       <Router>
-        {/* <ScrollToTop /> */}
+        <ScrollToTop />
         <Routes>
           <Route path="/error" element={<div>error page</div>} />
 
@@ -27,11 +30,16 @@ function App() {
           {/* Dashboard Layout */}
           <Route element={<DashboardLayout />}>
             <Route index path="/" element={<Home />} />
-            {/* <Route element={<DashboardLayout />}> */}
+            <Route element={<CurrentWorkspacehandler />}>
               <Route index path="/:workspaceId/" element={<LinksPage />} />
+              <Route index path="/:workspaceId/upgrade" element={<Upgrade />} />
               <Route path="/:workspaceId/analytics" element={<Signin />} />
               <Route path="/:workspaceId/settings" element={<Signin />} />
-            {/* </Route> */}
+              <Route
+                path="/:workspaceId/settings/billing"
+                element={<Signin />}
+              />
+            </Route>
           </Route>
 
           {/* Auth Layout */}

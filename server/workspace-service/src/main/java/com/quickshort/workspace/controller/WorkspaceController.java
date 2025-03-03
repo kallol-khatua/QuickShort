@@ -127,32 +127,6 @@ public class WorkspaceController {
     }
 
 
-    // Update existing workspace details
-    @PutMapping({"/{workspaceId}", "/{workspaceId}/"})
-    public ResponseEntity<SuccessApiResponse<WorkspaceDto>> updateWorkspace(@PathVariable UUID workspaceId, @RequestBody(required = false) WorkspaceDto workspaceDto) {
-
-        if (workspaceDto == null) {
-            workspaceDto = new WorkspaceDto();
-        }
-
-        // Update workspace
-        WorkspaceDto updatedWorkspace = workspaceService.updateWorkspace(workspaceId, workspaceDto);
-        LOGGER.info("Workspace detail updated -> {}", updatedWorkspace.getId().toString());
-
-        // Set up response
-        SuccessApiResponse<WorkspaceDto> response = new SuccessApiResponse<>();
-        response.setStatus_code(HttpStatus.OK.value());
-        response.setStatus_text(HttpStatus.OK.name());
-        response.setSuccess(true);
-        response.setStatus("Workspace Updated");
-        response.setMessage("Workspace details updated");
-        response.setData(updatedWorkspace);
-
-        // Return the response with 200 status
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
-
-
     // Create short url
     @PostMapping(value = {"/{workspaceId}/shorten-url", "/{workspaceId}/shorten-url/"}, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<SuccessApiResponse<ShortUrlDto>> createShortUrl(@PathVariable UUID workspaceId, @RequestBody(required = false) ShortUrlDto shortUrlDto) {

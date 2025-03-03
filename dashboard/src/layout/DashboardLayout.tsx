@@ -11,7 +11,7 @@ const LayoutContent: React.FC = () => {
   const { isExpanded, isMobileOpen } = useSidebar();
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex ">
       <div>
         <AppSidebar />
         {/* <Backdrop /> */}
