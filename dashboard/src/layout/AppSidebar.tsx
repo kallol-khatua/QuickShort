@@ -38,7 +38,7 @@ const ownerOptions: NavItem[] = [
     // path: "/settings",
     subItems: [
       { name: "Billing", path: "/settings/billing" },
-      { name: "domain", path: "/settings/" },
+      { name: "People", path: "/settings/people" },
     ],
   },
 ];
@@ -237,7 +237,9 @@ const AppSidebar: React.FC = () => {
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
-            if (isActive(currentWorkspace?.workspaceId.id + subItem.path)) {
+            if (
+              isActive("/" + currentWorkspace?.workspaceId.id + subItem.path)
+            ) {
               setOpenSubmenu({
                 type: menuType as "main" | "others",
                 index,
@@ -515,10 +517,24 @@ const AppSidebar: React.FC = () => {
                     {currentWorkspace.workspaceId.linkCreationLimitPerMonth}
                   </span>
                 </div>
-                <p className="text-xs text-gray-400">
-                  Usage will reset{" "}
-                  {getDate(currentWorkspace.workspaceId.nextResetDate)}
-                </p>
+
+                {currentWorkspace.memberType === "OWNER" && (
+                  <>
+                    <div className="flex justify-between text-sm font-medium">
+                      <span className="flex items-center gap-2 text-black dark:text-white">
+                        <span>Members</span>
+                      </span>
+                      <span className="text-gray-500">
+                        {currentWorkspace.workspaceId.memberCount} of{" "}
+                        {currentWorkspace.workspaceId.memberLimit}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      Usage will reset{" "}
+                      {getDate(currentWorkspace.workspaceId.nextResetDate)}
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Fixed Button at Bottom */}

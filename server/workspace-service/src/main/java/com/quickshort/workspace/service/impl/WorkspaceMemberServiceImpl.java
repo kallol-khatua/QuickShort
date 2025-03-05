@@ -330,7 +330,7 @@ public class WorkspaceMemberServiceImpl implements WorkspaceMemberService {
             if (existingWorkspace.isEmpty()) {
                 List<FieldError> errors = new ArrayList<>();
                 errors.add(new FieldError("No workspace found", "workspace_id"));
-                throw new BadRequestException("Invalid Data Provided", "No workspace found for the id", errors);
+                throw new BadRequestException("Invalid Data Provided", "No workspace found", errors);
             }
 
 
@@ -365,7 +365,7 @@ public class WorkspaceMemberServiceImpl implements WorkspaceMemberService {
             Optional<WorkspaceMember> workspaceMember = workspaceMemberRepository.findByIdAndWorkspaceId(workspaceMemberId, workspace);
             if (workspaceMember.isEmpty()) {
                 errors.add(new FieldError("No member found", "workspace_member_id"));
-                throw new BadRequestException("Invalid Data Provided", "No member found for the id", errors);
+                throw new BadRequestException("Invalid Data Provided", "No member found", errors);
             }
             WorkspaceMember appliedMember = workspaceMember.get();
 
@@ -373,14 +373,14 @@ public class WorkspaceMemberServiceImpl implements WorkspaceMemberService {
             // If already verified or rejected then not allow to again verify
             if (appliedMember.getStatus() != MemberStatus.APPLIED) {
                 errors.add(new FieldError("Already verified", "workspace_member_id"));
-                throw new BadRequestException("Invalid Data Provided", "Already verified", errors);
+                throw new BadRequestException("Invalid Data Provided", "Member already verified", errors);
             }
 
 
             // In the workspace count should less than the limit to add a member
             if (workspace.getMemberCount() >= workspace.getMemberLimit()) {
                 errors.add(new FieldError("Can not be verified as member of the workspace"));
-                throw new BadRequestException("Workspace Member Limit Exceed", "Can not be verified as member of the workspace", errors);
+                throw new BadRequestException("Workspace Member Limit Exceed", "Workspace Member Limit Exceed", errors);
             }
 
 

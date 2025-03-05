@@ -30,6 +30,9 @@ public class User implements Serializable {
     @Column(name = "password", nullable = false)
     private String password;
 
+    @Column(name = "profile_image_url")
+    private String profileImageURL;
+
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
     private UserRole role;

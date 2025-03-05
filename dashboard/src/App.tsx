@@ -13,6 +13,9 @@ import ProtectedRoutePages from "./pages/ProtectedRoutePages";
 import LinksPage from "./pages/Links/LinksPage";
 import CurrentWorkspacehandler from "./components/CurrentWorkspaceHandler";
 import Upgrade from "./pages/Payments/Upgrade";
+import Billing from "./pages/Payments/Billing";
+import People from "./pages/Settings/People";
+import OwnerRoute from "./components/OwnerRoute";
 
 function App() {
   return (
@@ -34,11 +37,19 @@ function App() {
               <Route index path="/:workspaceId/" element={<LinksPage />} />
               <Route index path="/:workspaceId/upgrade" element={<Upgrade />} />
               <Route path="/:workspaceId/analytics" element={<Signin />} />
-              <Route path="/:workspaceId/settings" element={<Signin />} />
-              <Route
-                path="/:workspaceId/settings/billing"
-                element={<Signin />}
-              />
+
+              {/* allow only for member */}
+              <Route element={<OwnerRoute />}>
+                <Route path="/:workspaceId/settings" element={<Signin />} />
+                <Route
+                  path="/:workspaceId/settings/billing"
+                  element={<Billing />}
+                />
+                <Route
+                  path="/:workspaceId/settings/people"
+                  element={<People />}
+                />
+              </Route>
             </Route>
           </Route>
 

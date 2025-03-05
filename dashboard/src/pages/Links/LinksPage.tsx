@@ -75,7 +75,7 @@ const ListLinks: React.FC<{
         {links.map((link) => (
           <div
             key={link.id}
-            className="border dark:border-gray-700 dark:bg-gray-800 rounded-lg p-4 mb-3 flex justify-between items-center"
+            className="border bg-white dark:border-gray-700 dark:bg-gray-800 rounded-lg p-4 mb-3 flex justify-between items-center"
           >
             <div className="flex items-center">
               <div>
