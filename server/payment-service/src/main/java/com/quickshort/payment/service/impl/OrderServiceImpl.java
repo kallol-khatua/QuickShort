@@ -28,6 +28,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -98,9 +100,8 @@ public class OrderServiceImpl implements OrderService {
             }
 
 
-            // TODO: Add receipt
             // Create razorpay order
-            String razorpayOrderId = razorpayService.createOrder(plan.getAmount());
+            String razorpayOrderId = razorpayService.createOrder(plan.getAmount(), workspace.getId().toString());
             Order newOrder = new Order();
             newOrder.setPlanId(plan);
             newOrder.setAmount(plan.getAmount());
@@ -230,6 +231,131 @@ public class OrderServiceImpl implements OrderService {
                 return OrderMapper.maptoOrderDto(updatedOrder);
             }
         } catch (BadRequestException | ForbiddenException exception) {
+            throw exception;
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error while creating order", e);
+            List<FieldError> errors = new ArrayList<>();
+            errors.add(new FieldError("Internal Server Error"));
+            throw new InternalServerErrorException("Internal Server Error", "Internal Server Error", errors);
+        }
+    }
+
+    @Override
+    public List<OrderDto> getAllOrders(UUID workspaceId) {
+        try {
+            List<FieldError> errors = new ArrayList<>();
+
+            // Check workspace exist or not
+            Optional<Workspace> existingWorkspace = workspaceRepository.findById(workspaceId);
+            if (existingWorkspace.isEmpty()) {
+                errors.add(new FieldError("No workspace found", "workspace_id"));
+                throw new BadRequestException("Invalid Data Provided", "No workspace found", errors);
+            }
+            Workspace workspace = existingWorkspace.get();
+
+
+            // Allow upgraded workspaces only
+            if (workspace.getType() == WorkspaceType.FREE) {
+                errors.add(new FieldError("Upgraded To Premium Plans", "workspace_id"));
+                throw new BadRequestException("Upgraded To Premium Plans", "Upgrade your workspace first", errors);
+            }
+
+
+            List<Order> orders = orderRepository.findByWorkspaceId(workspace);
+
+            return orders.stream()
+                    .map(order -> new OrderDto(
+                            order.getId(),
+                            order.getPlanId().getId(),
+                            order.getAmount(),
+                            order.getRazorpayOrderId(),
+                            order.getRazorpayPaymentId(),
+                            order.getWorkspaceId().getId(),
+                            order.getPaidAt(),
+                            order.getPlanStartDate(),
+                            order.getPlanEndDate(),
+                            order.getOrderStatus()
+                    ))
+                    .collect(Collectors.toList());
+        } catch (BadRequestException | ForbiddenException exception) {
+            throw exception;
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error while creating order", e);
+            List<FieldError> errors = new ArrayList<>();
+            errors.add(new FieldError("Internal Server Error"));
+            throw new InternalServerErrorException("Internal Server Error", "Internal Server Error", errors);
+        }
+    }
+
+
+    // Create repay order if workspace is active, premium
+    @Transactional
+    @Override
+    public OrderDto createRepayOrder(OrderDto orderDto) {
+        try {
+            List<FieldError> errors = new ArrayList<>();
+            if (orderDto.getWorkspaceId() == null || orderDto.getWorkspaceId().toString().isEmpty()) {
+                errors.add(new FieldError("Workspace id is required", "workspace_id"));
+            }
+            if (orderDto.getPlanId() == null || orderDto.getPlanId().toString().isEmpty()) {
+                errors.add(new FieldError("Plan id is required", "plan_id"));
+            }
+            if (!errors.isEmpty()) {
+                throw new BadRequestException("Invalid Data Provided", "Please fill all the details", errors);
+            }
+
+
+            // Check plan exist or not, if not then throw error
+            Optional<Plan> existingPlan = planRepository.findById(orderDto.getPlanId());
+            if (existingPlan.isEmpty()) {
+                errors.add(new FieldError("No plan found", "plan_id"));
+                throw new BadRequestException("Invalid Data Provided", "No plan found.", errors);
+            }
+            Plan plan = existingPlan.get();
+
+
+            // Check workspace exist or not, if not exist then throw error
+            Optional<Workspace> existingWorkspace = workspaceRepository.findById(orderDto.getWorkspaceId());
+            if (existingWorkspace.isEmpty()) {
+                errors.add(new FieldError("No workspace found", "workspace_id"));
+                throw new BadRequestException("Invalid Data Provided", "No workspace found.", errors);
+            }
+            Workspace workspace = existingWorkspace.get();
+
+
+            // Allow order creation only when workspace type is same as the plan type
+            // If not same then throw error
+            if (workspace.getType() != plan.getWorkspaceType()) {
+                errors.add(new FieldError("Can not create order", "workspace_id"));
+                throw new MethodNotAllowedException("Can not create order", "Can not create order", errors);
+            }
+
+
+            // If order is already created when status is awaiting payment then return the already created order
+            Optional<Order> existingOrder = orderRepository.findByWorkspaceIdAndOrderStatus(workspace, OrderStatus.AWAITING_PAYMENT);
+            if (existingOrder.isPresent()) {
+                LOGGER.info("Order already exist");
+                return OrderMapper.maptoOrderDto(existingOrder.get());
+            }
+
+
+            // Create razorpay order
+            String razorpayOrderId = razorpayService.createOrder(plan.getAmount(), workspace.getId().toString());
+            Order newOrder = new Order();
+            newOrder.setPlanId(plan);
+            newOrder.setAmount(plan.getAmount());
+            newOrder.setRazorpayOrderId(razorpayOrderId);
+            newOrder.setWorkspaceId(workspace);
+            newOrder.setOrderStatus(OrderStatus.AWAITING_PAYMENT);
+
+
+            // save order to DB
+            Order savedOrder = orderRepository.save(newOrder);
+
+
+            // Return the order
+            return OrderMapper.maptoOrderDto(savedOrder);
+        } catch (BadRequestException | ForbiddenException | MethodNotAllowedException exception) {
             throw exception;
         } catch (Exception e) {
             LOGGER.error("Unexpected error while creating order", e);

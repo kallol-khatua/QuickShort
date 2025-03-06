@@ -38,9 +38,9 @@ function App() {
               <Route index path="/:workspaceId/upgrade" element={<Upgrade />} />
               <Route path="/:workspaceId/analytics" element={<Signin />} />
 
-              {/* allow only for member */}
+              {/* allow only for owner */}
               <Route element={<OwnerRoute />}>
-                <Route path="/:workspaceId/settings" element={<Signin />} />
+                {/* <Route path="/:workspaceId/settings" element={<Signin />} /> */}
                 <Route
                   path="/:workspaceId/settings/billing"
                   element={<Billing />}

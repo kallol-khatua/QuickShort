@@ -11,12 +11,6 @@ import axiosOrderInstance from "../../axiosOrderInstance";
 import { SuccessApiResponse } from "../../helper/SuccessApiResponse";
 import { setCurrentWorkspace, setIsLoaded } from "../../redux/workspaceSlice";
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
-
 interface Plan {
   id: string;
   workspaceType: "PRO" | "BUSINESS";
@@ -255,16 +249,6 @@ const Upgrade = () => {
 
       return;
     }
-
-    //
-    //
-    //
-    //
-    //  TODO: if already order created ask to cancel or continue with that
-    //
-    //
-    //
-    //
 
     // if order is created then pay
     if (order) {

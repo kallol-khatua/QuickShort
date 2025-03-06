@@ -7,6 +7,12 @@ import { store } from "./redux/store.ts";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "./context/ThemeProvider.tsx";
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>

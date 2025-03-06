@@ -14,6 +14,7 @@ export interface WorkspaceMember {
         memberCount: number,
         lastResetDate: string,
         nextResetDate: string,
+        nextBillingDate: string,
         workspaceStatus: string
     }
 }

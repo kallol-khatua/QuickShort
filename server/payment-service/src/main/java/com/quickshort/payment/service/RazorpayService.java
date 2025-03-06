@@ -16,12 +16,13 @@ public class RazorpayService {
     @Value("${razorpay.api.secret}")
     private String apiSecret;
 
-    public String createOrder(double amount) throws RazorpayException {
+    public String createOrder(double amount, String receipt) throws RazorpayException {
         RazorpayClient razorpay = new RazorpayClient(apiKey, apiSecret);
 
         JSONObject orderRequest = new JSONObject();
         orderRequest.put("amount", (int) (amount * 100)); // Amount in paise
         orderRequest.put("currency", "INR");
+        orderRequest.put("receipt", receipt); // Adding receipt
         orderRequest.put("payment_capture", 1); // Auto capture payment
 
         Order order = razorpay.orders.create(orderRequest);
