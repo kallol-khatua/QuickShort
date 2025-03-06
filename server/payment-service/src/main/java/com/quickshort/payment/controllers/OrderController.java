@@ -91,7 +91,24 @@ public class OrderController {
     }
 
 
-    // TODO: Cancel order
+    // Cancel order
+    @PostMapping(value = {"/{orderId}/cancel", "/{orderId}/cancel/"})
+    public ResponseEntity<SuccessApiResponse<OrderDto>> cancelOrder(@PathVariable UUID orderId) {
+
+        OrderDto order = orderService.cancelOrder(orderId);
+
+        // Set up response
+        SuccessApiResponse<OrderDto> response = new SuccessApiResponse<>();
+        response.setStatus_code(HttpStatus.OK.value());
+        response.setStatus_text(HttpStatus.OK.name());
+        response.setSuccess(true);
+        response.setStatus("Order cancelled");
+        response.setMessage("Order cancelled");
+        response.setData(order);
+
+        // Return the response with 200 Created status
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 
 
     // create repay order

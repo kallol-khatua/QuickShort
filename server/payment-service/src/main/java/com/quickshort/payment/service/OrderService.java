@@ -13,4 +13,6 @@ public interface OrderService {
     List<OrderDto> getAllOrders(UUID workspaceId);
 
     OrderDto createRepayOrder(OrderDto orderDto);
+
+    OrderDto cancelOrder(UUID orderId);
 }

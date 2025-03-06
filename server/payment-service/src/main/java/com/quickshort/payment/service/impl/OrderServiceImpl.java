@@ -20,6 +20,7 @@ import com.quickshort.payment.service.RazorpayService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,10 +93,10 @@ public class OrderServiceImpl implements OrderService {
             }
 
 
-            // TODO: handle at frontend
             // If order is already created when status is awaiting payment then return the already created order
             Optional<Order> existingOrder = orderRepository.findByWorkspaceIdAndOrderStatus(workspace, OrderStatus.AWAITING_PAYMENT);
             if (existingOrder.isPresent()) {
+                LOGGER.info("Order already created");
                 return OrderMapper.maptoOrderDto(existingOrder.get());
             }
 
@@ -240,6 +241,8 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+
+    // All orders
     @Override
     public List<OrderDto> getAllOrders(UUID workspaceId) {
         try {
@@ -254,14 +257,7 @@ public class OrderServiceImpl implements OrderService {
             Workspace workspace = existingWorkspace.get();
 
 
-            // Allow upgraded workspaces only
-            if (workspace.getType() == WorkspaceType.FREE) {
-                errors.add(new FieldError("Upgraded To Premium Plans", "workspace_id"));
-                throw new BadRequestException("Upgraded To Premium Plans", "Upgrade your workspace first", errors);
-            }
-
-
-            List<Order> orders = orderRepository.findByWorkspaceId(workspace);
+            List<Order> orders = orderRepository.findByWorkspaceId(workspace, Sort.by("createdAt").descending());
 
             return orders.stream()
                     .map(order -> new OrderDto(
@@ -355,6 +351,45 @@ public class OrderServiceImpl implements OrderService {
 
             // Return the order
             return OrderMapper.maptoOrderDto(savedOrder);
+        } catch (BadRequestException | ForbiddenException | MethodNotAllowedException exception) {
+            throw exception;
+        } catch (Exception e) {
+            LOGGER.error("Unexpected error while creating order", e);
+            List<FieldError> errors = new ArrayList<>();
+            errors.add(new FieldError("Internal Server Error"));
+            throw new InternalServerErrorException("Internal Server Error", "Internal Server Error", errors);
+        }
+    }
+
+    // cancel order
+    @Override
+    public OrderDto cancelOrder(UUID orderId) {
+        try {
+            List<FieldError> errors = new ArrayList<>();
+
+            // If order not found throw error
+            Optional<Order> existingOrder = orderRepository.findById(orderId);
+            if (existingOrder.isEmpty()) {
+                errors.add(new FieldError("Order not found", "order_id"));
+                throw new BadRequestException("Invalid Data Provided", "Order not found.", errors);
+            }
+
+
+            // if OrderStatus != AWAITING_PAYMENT then do not allow to cancel order
+            Order order = existingOrder.get();
+            if (order.getOrderStatus() != OrderStatus.AWAITING_PAYMENT) {
+                errors.add(new FieldError("Not allowed to cancel order", "order_id"));
+                throw new BadRequestException("Invalid Data Provided", "Not allowed to cancel order.", errors);
+            }
+
+
+            // update status to cancelled and save to DB
+            order.setOrderStatus(OrderStatus.CANCELLED);
+            Order updatedOrder = orderRepository.save(order);
+
+
+            // Return the order
+            return OrderMapper.maptoOrderDto(updatedOrder);
         } catch (BadRequestException | ForbiddenException | MethodNotAllowedException exception) {
             throw exception;
         } catch (Exception e) {

@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 import { ErrorApiResponse } from "../../helper/ErrorApiResponse";
 import axios from "axios";
 import { logout } from "../../redux/authSlice";
+import RotatingLoader from "../../components/ui/loader/RotatingLoader";
 
 type Data = {
   amount: number;
@@ -33,85 +34,95 @@ interface OrderData extends SuccessApiResponse {
   data: Data;
 }
 
-const ListInvitations: React.FC = () => {
+interface AllOrders extends SuccessApiResponse {
+  data: Data[];
+}
+
+// List all orders
+const ListInvitations: React.FC<{
+  allOrders: Data[];
+  handleReload: () => void;
+}> = ({ allOrders, handleReload }) => {
+  const dispatch = useDispatch();
+
+  // calcel order when satus = awaiting payment
+  const handleCancelOrder = async (order: Data) => {
+    // console.log(order);
+    // console.log(order.id);
+
+    try {
+      const response = await axiosOrderInstance.post(`/${order.id}/cancel`);
+      console.log(response);
+
+      toast.success("Order cancelled successfully!");
+      handleReload();
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err) && err.response) {
+        const errorData: ErrorApiResponse = err.response.data;
+        toast.error(errorData.message);
+
+        // if unauthorized the logout using auth slice, protected route will take to signin page
+        if (errorData.status_code === 401) {
+          dispatch(logout());
+        }
+      } else {
+        console.error("Unexpected error:", err);
+      }
+
+      return;
+    }
+  };
+
   return (
     <div className="dark:bg-gray-900 rounded-lg">
-      <div
-        // key={invitation.id}
-        className="border bg-white dark:border-gray-700 dark:bg-gray-800 rounded-lg p-4 mb-3"
-      >
-        <div className="sm:flex sm:justify-between sm:items-center">
-          {/* title */}
-          <div className="flex items-center space-x-2">
-            <div>
-              {/* <Avatar src={invitation.userId.profileImageURL} size="medium" /> */}
+      {allOrders.map((order) => {
+        return (
+          <div
+            key={order.id}
+            className="border bg-white dark:border-gray-700 dark:bg-gray-800 rounded-lg p-4 mb-3"
+          >
+            <div className="sm:flex sm:justify-between sm:items-center">
+              {/* title */}
+              <div className="flex items-center space-x-2">
+                <div>
+                  {/* <Avatar src={invitation.userId.profileImageURL} size="medium" /> */}
+                </div>
+
+                <div className="flex flex-col">
+                  <div className="font-semibold dark:text-white">
+                    {order.orderStatus}
+                  </div>
+                  {order.amount}
+                  <p className="text-gray-500 dark:text-gray-400 text-sm truncate max-w-[250px] sm:max-w-[350px] md:max-w-[550px] overflow-hidden">
+                    {order.id}
+                  </p>
+                  {order.workspaceId}
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              {order.orderStatus === "AWAITING_PAYMENT" && (
+                <div className="flex items-center justify-center gap-5 mt-2 sm:mt-0">
+                  <button
+                    className={`inline-flex items-center justify-center gap-2 rounded-lg transition font-medium px-4 py-3 text-sm bg-success-500 text-white dark:text-white shadow-theme-xs hover:bg-success-600`}
+                    // onClick={() => handleVerifyInvitation(invitation)}
+                  >
+                    Pay now
+                  </button>
+                  <button
+                    className={`inline-flex items-center justify-center gap-2 rounded-lg transition font-medium px-4 py-3 text-sm bg-error-500 text-white dark:text-white shadow-theme-xs hover:bg-error-600`}
+                    onClick={() => handleCancelOrder(order)}
+                  >
+                    Cancel order
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div className="flex flex-col">
-              <div className="font-semibold dark:text-white">sokdhsj</div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm truncate max-w-[250px] sm:max-w-[350px] md:max-w-[550px] overflow-hidden">
-                psodjf
-              </p>
-            </div>
+            {/* triple dot icon */}
           </div>
-
-          {/* Action buttons */}
-          <div className="flex items-center justify-center gap-5 mt-2 sm:mt-0">
-            <button
-              className={`inline-flex items-center justify-center gap-2 rounded-lg transition font-medium px-4 py-3 text-sm bg-success-500 text-white dark:text-white shadow-theme-xs hover:bg-success-600`}
-              // onClick={() => handleVerifyInvitation(invitation)}
-            >
-              Allow
-            </button>
-            <button
-              className={`inline-flex items-center justify-center gap-2 rounded-lg transition font-medium px-4 py-3 text-sm bg-error-500 text-white dark:text-white shadow-theme-xs hover:bg-error-600`}
-              // onClick={() => handleRejectInvitation(invitation)}
-            >
-              Reject
-            </button>
-          </div>
-        </div>
-
-        {/* triple dot icon */}
-      </div>
-      <div
-        // key={invitation.id}
-        className="border bg-white dark:border-gray-700 dark:bg-gray-800 rounded-lg p-4 mb-3"
-      >
-        <div className="sm:flex sm:justify-between sm:items-center">
-          {/* title */}
-          <div className="flex items-center space-x-2">
-            <div>
-              {/* <Avatar src={invitation.userId.profileImageURL} size="medium" /> */}
-            </div>
-
-            <div className="flex flex-col">
-              <div className="font-semibold dark:text-white">sokdhsj</div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm truncate max-w-[250px] sm:max-w-[350px] md:max-w-[550px] overflow-hidden">
-                psodjf
-              </p>
-            </div>
-          </div>
-
-          {/* Action buttons */}
-          <div className="flex items-center justify-center gap-5 mt-2 sm:mt-0">
-            <button
-              className={`inline-flex items-center justify-center gap-2 rounded-lg transition font-medium px-4 py-3 text-sm bg-success-500 text-white dark:text-white shadow-theme-xs hover:bg-success-600`}
-              // onClick={() => handleVerifyInvitation(invitation)}
-            >
-              Allow
-            </button>
-            <button
-              className={`inline-flex items-center justify-center gap-2 rounded-lg transition font-medium px-4 py-3 text-sm bg-error-500 text-white dark:text-white shadow-theme-xs hover:bg-error-600`}
-              // onClick={() => handleRejectInvitation(invitation)}
-            >
-              Reject
-            </button>
-          </div>
-        </div>
-
-        {/* triple dot icon */}
-      </div>
+        );
+      })}
     </div>
   );
 };
@@ -123,6 +134,9 @@ const Billing = () => {
   const dispatch = useDispatch();
   const [currPlans, setCurrPlans] = useState<Plan[]>([]);
   const [nextPlan, setNextPlan] = useState<Plan>();
+  const [allOrders, setAllorders] = useState<Data[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [reload, setReload] = useState<boolean>(false);
 
   const getDate = (data: string): string => {
     const date = new Date(data);
@@ -136,6 +150,43 @@ const Billing = () => {
 
     return formattedDate;
   };
+
+  const handleReload = () => {
+    setReload((prev) => !prev);
+  };
+
+  // load previous order
+  useEffect(() => {
+    const loadOrders = async () => {
+      try {
+        const response = await axiosOrderInstance.get<AllOrders>(
+          `/${currentWorkspace?.workspaceId.id}/all-orders`
+        );
+
+        setAllorders(response.data.data);
+        setReload(false);
+        setTimeout(() => {
+          setIsLoaded(true);
+        }, 250);
+      } catch (err: unknown) {
+        if (axios.isAxiosError(err) && err.response) {
+          const errorData: ErrorApiResponse = err.response.data;
+          toast.error(errorData.message);
+
+          // if unauthorized the logout using auth slice, protected route will take to signin page
+          if (errorData.status_code === 401) {
+            dispatch(logout());
+          }
+        } else {
+          console.error("Unexpected error:", err);
+        }
+
+        return;
+      }
+    };
+
+    loadOrders();
+  }, [currentWorkspace?.workspaceId.id, dispatch, reload]);
 
   // Choose default plan for yearly
   useEffect(() => {
@@ -160,6 +211,10 @@ const Billing = () => {
     const planId = nextPlan?.id;
 
     if (!workspaceId || !planId) {
+      if (currentWorkspace?.workspaceId.type === "FREE") {
+        toast.error("Please upgrade to premium plan");
+        return;
+      }
       toast.error("Provide all data");
       return;
     }
@@ -234,23 +289,33 @@ const Billing = () => {
       <PageBreadcrumb pageTitle="Billing" />
 
       <div className="flex flex-col flex-1 min-h-0">
-        <div className="w-full flex justify-between mb-4">
-          <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-300">
-            <span>
-              Next billng date{" "}
-              {getDate(currentWorkspace?.workspaceId.nextBillingDate || "")}
-            </span>
+        {currentWorkspace?.workspaceId.type !== "FREE" && (
+          <div className="w-full flex justify-between mb-4">
+            <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-300">
+              <span>
+                Next billng date{" "}
+                {getDate(currentWorkspace?.workspaceId.nextBillingDate || "")}
+              </span>
+            </div>
+
+            <button
+              className="flex items-center justify-center p-3 font-medium text-white rounded-lg bg-gray-900 text-theme-sm hover:bg-gray-800 dark:bg-white dark:text-black dark:bg-gray-300"
+              onClick={handlePayNow}
+            >
+              Pay now
+            </button>
           </div>
+        )}
 
-          <button
-            className="flex items-center justify-center p-3 font-medium text-white rounded-lg bg-gray-900 text-theme-sm hover:bg-gray-800 dark:bg-white dark:text-black dark:bg-gray-300"
-            onClick={handlePayNow}
-          >
-            Pay now
-          </button>
-        </div>
-
-        <ListInvitations />
+        {isLoaded ? (
+          <ListInvitations allOrders={allOrders} handleReload={handleReload} />
+        ) : (
+          <div className="flex-1 min-h-0 flex justify-center items-center w-full">
+            <div className="w-full">
+              <RotatingLoader />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

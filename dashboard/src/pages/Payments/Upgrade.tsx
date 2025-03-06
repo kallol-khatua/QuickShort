@@ -146,7 +146,7 @@ const CheckType: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return currentWorkspace?.workspaceId.type === "FREE" ? (
     children
   ) : (
-    <Navigate to="/" />
+    <Navigate to={`/${currentWorkspace?.workspaceId.id}/settings/billing`} />
   );
 };
 
