@@ -12,6 +12,7 @@ import { SuccessApiResponse } from "../../helper/SuccessApiResponse";
 import Avatar from "../../components/ui/avatar/Avatar";
 import { FiMoreVertical } from "react-icons/fi";
 import toast from "react-hot-toast";
+import Invite from "./Invite";
 
 interface Users {
   id: string;
@@ -130,48 +131,59 @@ const ListInvitations: React.FC<{
 
   return (
     <div className="dark:bg-gray-900 rounded-lg">
-      {invitations.map((invitation) => (
-        <div
-          key={invitation.id}
-          className="border bg-white dark:border-gray-700 dark:bg-gray-800 rounded-lg p-4 mb-3"
-        >
-          <div className="sm:flex sm:justify-between sm:items-center">
-            {/* title */}
-            <div className="flex items-center space-x-2">
-              <div>
-                <Avatar src={invitation.userId.profileImageURL} size="medium" />
-              </div>
-
-              <div className="flex flex-col">
-                <div className="font-semibold dark:text-white">
-                  {invitation.userId.email}
+      {invitations.length > 0 ? (
+        invitations.map((invitation) => (
+          <div
+            key={invitation.id}
+            className="border bg-white dark:border-gray-700 dark:bg-gray-800 rounded-lg p-4 mb-3"
+          >
+            <div className="sm:flex sm:justify-between sm:items-center">
+              {/* title */}
+              <div className="flex items-center space-x-2">
+                <div>
+                  <Avatar
+                    src={invitation.userId.profileImageURL}
+                    size="medium"
+                  />
                 </div>
-                <p className="text-gray-500 dark:text-gray-400 text-sm truncate max-w-[250px] sm:max-w-[350px] md:max-w-[550px] overflow-hidden">
-                  {invitation.memberType}
-                </p>
+
+                <div className="flex flex-col">
+                  <div className="font-semibold dark:text-white">
+                    {invitation.userId.email}
+                  </div>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm truncate max-w-[250px] sm:max-w-[350px] md:max-w-[550px] overflow-hidden">
+                    {invitation.memberType}
+                  </p>
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center justify-center gap-5 mt-2 sm:mt-0">
+                <button
+                  className={`inline-flex items-center justify-center gap-2 rounded-lg transition font-medium px-4 py-3 text-sm bg-success-500 text-white dark:text-white shadow-theme-xs hover:bg-success-600`}
+                  onClick={() => handleVerifyInvitation(invitation)}
+                >
+                  Allow
+                </button>
+                <button
+                  className={`inline-flex items-center justify-center gap-2 rounded-lg transition font-medium px-4 py-3 text-sm bg-error-500 text-white dark:text-white shadow-theme-xs hover:bg-error-600`}
+                  onClick={() => handleRejectInvitation(invitation)}
+                >
+                  Reject
+                </button>
               </div>
             </div>
 
-            {/* Action buttons */}
-            <div className="flex items-center justify-center gap-5 mt-2 sm:mt-0">
-              <button
-                className={`inline-flex items-center justify-center gap-2 rounded-lg transition font-medium px-4 py-3 text-sm bg-success-500 text-white dark:text-white shadow-theme-xs hover:bg-success-600`}
-                onClick={() => handleVerifyInvitation(invitation)}
-              >
-                Allow
-              </button>
-              <button
-                className={`inline-flex items-center justify-center gap-2 rounded-lg transition font-medium px-4 py-3 text-sm bg-error-500 text-white dark:text-white shadow-theme-xs hover:bg-error-600`}
-                onClick={() => handleRejectInvitation(invitation)}
-              >
-                Reject
-              </button>
-            </div>
+            {/* triple dot icon */}
           </div>
-
-          {/* triple dot icon */}
+        ))
+      ) : (
+        <div className="flex justify-center items-center">
+          <p className="mt-1 text-gray-600 text-theme-md dark:text-gray-500">
+            No Invitations
+          </p>
         </div>
-      ))}
+      )}
     </div>
   );
 };
@@ -187,6 +199,7 @@ const People: React.FC = () => {
   const [members, setMembers] = useState<Response[]>([]);
   const [invitations, setInvitations] = useState<Response[]>([]);
   const [allreaponse, setAllreaponse] = useState<Response[]>([]);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   // filter member where status = verified
   useEffect(() => {
@@ -208,6 +221,10 @@ const People: React.FC = () => {
 
   const handleReload = () => {
     setReload((prev) => !prev);
+  };
+
+  const handleInviteModalToggle = () => {
+    setIsInviteModalOpen((prev) => !prev);
   };
 
   // Load members
@@ -260,7 +277,10 @@ const People: React.FC = () => {
 
             <div className="flex space-x-2 items-center">
               {/* Invite Button */}
-              <button className="flex items-center justify-center font-medium text-white rounded-lg bg-gray-900 text-theme-sm hover:bg-gray-800 dark:bg-white dark:text-black dark:bg-gray-300 h-10 px-4">
+              <button
+                className="flex items-center justify-center font-medium text-white rounded-lg bg-gray-900 text-theme-sm hover:bg-gray-800 dark:bg-white dark:text-black dark:bg-gray-300 h-10 px-4"
+                onClick={handleInviteModalToggle}
+              >
                 Invite
               </button>
               {/* Link Button */}
@@ -316,6 +336,13 @@ const People: React.FC = () => {
           </div>
         )}
       </div>
+
+      {isInviteModalOpen && (
+        <Invite
+          isInviteModalOpen={isInviteModalOpen}
+          handleInviteModalToggle={handleInviteModalToggle}
+        />
+      )}
     </div>
   );
 };

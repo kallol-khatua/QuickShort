@@ -10,6 +10,7 @@ import { ErrorApiResponse } from "../../helper/ErrorApiResponse";
 import axios from "axios";
 import { logout } from "../../redux/authSlice";
 import RotatingLoader from "../../components/ui/loader/RotatingLoader";
+import { Navigate } from "react-router-dom";
 
 type Data = {
   amount: number;
@@ -134,6 +135,7 @@ const Billing = () => {
   const dispatch = useDispatch();
   const [currPlans, setCurrPlans] = useState<Plan[]>([]);
   const [nextPlan, setNextPlan] = useState<Plan>();
+  const [nextPlanId, setnextPlanId] = useState<string>("");
   const [allOrders, setAllorders] = useState<Data[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [reload, setReload] = useState<boolean>(false);
@@ -191,8 +193,17 @@ const Billing = () => {
   // Choose default plan for yearly
   useEffect(() => {
     const plan = currPlans.filter((plan) => plan.planDuration === "YEARLY")[0];
-    setNextPlan(plan);
+
+    if (plan) {
+      setNextPlan(plan);
+      setnextPlanId(plan.id);
+    }
   }, [currPlans]);
+
+  useEffect(() => {
+    const plan = currPlans.filter((plan) => plan.id === nextPlanId)[0];
+    setNextPlan(plan);
+  }, [currPlans, nextPlanId]);
 
   // match plans with current workspace type
   useEffect(() => {
@@ -284,12 +295,14 @@ const Billing = () => {
     }
   };
 
+  // console.log(nextPlan);
+
   return (
     <div className="min-h-full flex flex-col">
       <PageBreadcrumb pageTitle="Billing" />
 
       <div className="flex flex-col flex-1 min-h-0">
-        {currentWorkspace?.workspaceId.type !== "FREE" && (
+        {currentWorkspace?.workspaceId.type !== "FREE" ? (
           <div className="w-full flex justify-between mb-4">
             <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-300">
               <span>
@@ -298,6 +311,29 @@ const Billing = () => {
               </span>
             </div>
 
+            {nextPlan && (
+              <select
+                title="size"
+                value={nextPlan?.id}
+                onChange={(e) => setnextPlanId(e.target.value)}
+                className="border rounded-lg px-4 py-1.5 appearance-none text-gray-700 dark:text-gray-300 dark:bg-gray-800 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              >
+                {currPlans.map((plan) => (
+                  <option key={plan.id} value={plan.id}>
+                    {plan.planDuration} {plan.amount} {plan.amountPerMonth}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* {currPlans.map((plan) => (
+              <div>
+                <div>{plan.planDuration}</div>
+                <div>{plan.amount}</div>
+                <div>{plan.percentageOff}</div>
+              </div>
+            ))} */}
+
             <button
               className="flex items-center justify-center p-3 font-medium text-white rounded-lg bg-gray-900 text-theme-sm hover:bg-gray-800 dark:bg-white dark:text-black dark:bg-gray-300"
               onClick={handlePayNow}
@@ -305,6 +341,8 @@ const Billing = () => {
               Pay now
             </button>
           </div>
+        ) : (
+          <Navigate to={`/${currentWorkspace.workspaceId.id}/upgrade`} />
         )}
 
         {isLoaded ? (
