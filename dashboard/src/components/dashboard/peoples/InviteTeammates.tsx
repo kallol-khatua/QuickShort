@@ -1,15 +1,12 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
-import Label from "../../form/Label";
 import Input from "../../form/input/InputField";
-import axiosWorkspaceInstance from "../../../axiosWorkspaceInstance";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import axios from "axios";
-import { ErrorApiResponse } from "../../../helper/ErrorApiResponse";
 import toast from "react-hot-toast";
-import { logout } from "../../../redux/authSlice";
-import { useNavigate } from "react-router-dom";
+
+// type memberType = "MEMBER" | "OWNER";
 
 const InviteTeammates: React.FC<{
   handleInviteModalToggle: () => void;
@@ -18,56 +15,36 @@ const InviteTeammates: React.FC<{
   const [errorData, setErrorData] = useState<string>("");
   const [error, setError] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
+  const [memberType, setMemberType] = useState("MEMBER");
+
   const currentWorkspace = useSelector(
     (state: RootState) => state.workspace.currentWorkspace
   );
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const handleCreateUrl = async () => {
     if (!email) {
-      setErrorData("Enter a valid URL");
+      setErrorData("Enter a valid email address");
       setError(true);
       return;
     }
 
     setLoading(true);
 
-    // try {
-    //   const response = await axiosWorkspaceInstance.post(
-    //     `/${currentWorkspace?.workspaceId.id}/shorten-url`,
-    //     { originalUrl: url }
-    //   );
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_EMAIL_SERVICE_BASE_URL}/${
+          currentWorkspace?.workspaceId.id
+        }/add`,
+        { email, memberType }
+      );
 
-    //   handleInviteModalToggle();
-    //   await navigator.clipboard.writeText(
-    //     `${import.meta.env.VITE_URL_TRACKING_BASE_URL}/${
-    //       response.data.data.shortCode
-    //     }`
-    //   );
-
-    //   toast.success("Copied short link to clipboard!");
-    // } catch (err: unknown) {
-    //   if (axios.isAxiosError(err) && err.response) {
-    //     const errorData: ErrorApiResponse = err.response.data;
-    //     toast.error(errorData.message);
-
-    //     // if unauthorized or forbidden the logout using auth slice, protected route will take to signin page
-    //     if (errorData.status_code === 401 || errorData.status_code === 403) {
-    //       dispatch(logout());
-    //     } else if (
-    //       errorData.status_code === 429 &&
-    //       currentWorkspace?.workspaceId.type === "FREE"
-    //     ) {
-    //       // if link creation limit exceeded and current
-    //       navigate("upgrade");
-    //     }
-    //   } else {
-    //     console.error("Unexpected error:", err);
-    //   }
-    // } finally {
-    //   setLoading(false);
-    // }
+      toast.success(response.data.message);
+    } catch (err: unknown) {
+      console.error("Unexpected error:", err);
+    } finally {
+      handleInviteModalToggle();
+      setLoading(false);
+    }
   };
 
   const handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void = (
@@ -98,22 +75,42 @@ const InviteTeammates: React.FC<{
 
         {/* Modal Body */}
         <div className="mt-2">
-          <Label>
-            Email <span className="text-error-500">*</span>{" "}
-          </Label>
-          <div className="relative">
-            <Input
-              placeholder="john@example.com"
-              name="email"
-              type="email"
-              value={email}
-              onChange={(e) => {
-                handleInputChange(e);
-              }}
-              error={error}
-            />
+          <div className="flex flex-col space-y-1 w-full max-w-sm">
+            <label
+              htmlFor="email"
+              className="text-sm font-medium text-gray-700 dark:text-white"
+            >
+              Email
+            </label>
+
+            <div className="flex items-center overflow-hidden">
+              <Input
+                placeholder="john@example.com"
+                name="email"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  handleInputChange(e);
+                }}
+                error={error}
+              />
+              <label htmlFor="memberType" className="sr-only">
+                Select member type
+              </label>
+              <select
+                value={memberType}
+                name="memberType"
+                id="memberType"
+                onChange={(e) => setMemberType(e.target.value)}
+                className="px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none dark:bg-gray-800 dark:text-white"
+              >
+                <option value="MEMBER">Member</option>
+                <option value="OWNER">Owner</option>
+              </select>
+            </div>
+
+            {error && <p className="text-red-500 text-sm mt-1">{errorData}</p>}
           </div>
-          {error && <p className="text-red-500 text-sm mt-1">{errorData}</p>}
         </div>
 
         {error && <p>{error}</p>}
@@ -129,7 +126,7 @@ const InviteTeammates: React.FC<{
 
           {loading ? (
             <button className="px-4 py-2 bg-blue-600 text-white rounded-md transition cursor-not-allowed">
-              Submitting
+              Sending
             </button>
           ) : (
             <button

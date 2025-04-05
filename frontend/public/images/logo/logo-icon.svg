@@ -1,0 +1,21 @@
+<svg
+  width="60"
+  height="60"
+  viewBox="0 0 60 60"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <!-- Blue Circle -->
+  <circle cx="30" cy="30" r="20" fill="#007BFF" />
+  
+  <!-- Stylized "Q" Shape -->
+  <path
+    d="M 30 15 Q 40 15, 40 25 T 30 35 T 20 25"
+    stroke="white"
+    stroke-width="3"
+    fill="none"
+  />
+  
+  <!-- Diagonal Slash (Tail of "Q") -->
+  <line x1="35" y1="35" x2="42" y2="42" stroke="white" stroke-width="3" />
+</svg>

@@ -28,8 +28,14 @@ function App() {
           {/* Protected routes */}
           <Route element={<ProtectedRoutePages />}>
             <Route path="/onbording" element=<div>onbording</div> />
-            <Route path="/:workspaceId/join-as-owner" element={<Signin />} />
-            <Route path="/:workspaceId/join-as-member" element={<Signin />} />
+            <Route
+              path="/:workspaceId/join-as-owner"
+              element={<div>owner</div>}
+            />
+            <Route
+              path="/:workspaceId/join-as-member"
+              element={<div>member</div>}
+            />
           </Route>
 
           {/* Dashboard Layout */}

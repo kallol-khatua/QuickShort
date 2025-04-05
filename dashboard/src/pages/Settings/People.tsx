@@ -13,6 +13,7 @@ import Avatar from "../../components/ui/avatar/Avatar";
 import { FiMoreVertical } from "react-icons/fi";
 import toast from "react-hot-toast";
 import Invite from "./Invite";
+import CopyUrl from "./CopyUrl";
 
 interface Users {
   id: string;
@@ -200,6 +201,8 @@ const People: React.FC = () => {
   const [invitations, setInvitations] = useState<Response[]>([]);
   const [allreaponse, setAllreaponse] = useState<Response[]>([]);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isCopyInviteUrlModalOpen, setISCopyInviteUrlModalOpen] =
+    useState(false);
 
   // filter member where status = verified
   useEffect(() => {
@@ -225,6 +228,10 @@ const People: React.FC = () => {
 
   const handleInviteModalToggle = () => {
     setIsInviteModalOpen((prev) => !prev);
+  };
+
+  const handleCopyInviteurlModalToggle = () => {
+    setISCopyInviteUrlModalOpen((prev) => !prev);
   };
 
   // Load members
@@ -284,7 +291,10 @@ const People: React.FC = () => {
                 Invite
               </button>
               {/* Link Button */}
-              <button className="border border-black dark:border-white h-10 px-4 py-2 rounded-md flex items-center justify-center transition">
+              <button
+                className="border border-black dark:border-white h-10 px-4 py-2 rounded-md flex items-center justify-center transition"
+                onClick={handleCopyInviteurlModalToggle}
+              >
                 <Link2 size={20} className="text-black dark:text-white" />
               </button>
             </div>
@@ -341,6 +351,13 @@ const People: React.FC = () => {
         <Invite
           isInviteModalOpen={isInviteModalOpen}
           handleInviteModalToggle={handleInviteModalToggle}
+        />
+      )}
+
+      {isCopyInviteUrlModalOpen && (
+        <CopyUrl
+          isCopyInviteUrlModalOpen={isCopyInviteUrlModalOpen}
+          handleCopyInviteurlModalToggle={handleCopyInviteurlModalToggle}
         />
       )}
     </div>
