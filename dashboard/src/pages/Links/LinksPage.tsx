@@ -192,50 +192,48 @@ const LinksPage: React.FC = () => {
 
   // Load all linked from Backend
   useEffect(() => {
-    if ((!isLinksLoaded || reload) && currentWorkspace) {
-      const loadLinks = async () => {
-        try {
-          // console.log("Loading links");
-          // console.log(currentWorkspace.workspaceId.id);
-          const response = await axiosWorkspaceInstance.get<LinksResponseData>(
-            `${currentWorkspace.workspaceId.id}/shorten-url?page=${number}&size=${size}`
-          );
+    const loadLinks = async () => {
+      try {
+        // console.log("Loading links");
+        // console.log(currentWorkspace.workspaceId.id);
+        const response = await axiosWorkspaceInstance.get<LinksResponseData>(
+          `${currentWorkspace?.workspaceId?.id}/shorten-url?page=${number}&size=${size}`
+        );
 
-          // console.log(response.data.data);
-          setLinks(response.data.data.content);
-          setNumber(response.data.data.empty ? 0 : response.data.data.number);
-          setNumberOfElements(response.data.data.numberOfElements);
-          setFirst(response.data.data.first);
-          setLast(response.data.data.last);
-          setEmpty(response.data.data.empty);
-          setTotalElements(response.data.data.totalElements);
-          setTotalPages(response.data.data.totalPages);
+        // console.log(response.data.data);
+        setLinks(response.data.data.content);
+        setNumber(response.data.data.empty ? 0 : response.data.data.number);
+        setNumberOfElements(response.data.data.numberOfElements);
+        setFirst(response.data.data.first);
+        setLast(response.data.data.last);
+        setEmpty(response.data.data.empty);
+        setTotalElements(response.data.data.totalElements);
+        setTotalPages(response.data.data.totalPages);
 
-          setTimeout(() => {
-            setIsLinksLoaded(true);
-            setReload(false);
-          }, 250);
-        } catch (err: unknown) {
-          //   console.log(err);
+        setTimeout(() => {
+          setIsLinksLoaded(true);
+          setReload(false);
+        }, 250);
+      } catch (err: unknown) {
+        //   console.log(err);
 
-          if (axios.isAxiosError(err) && err.response) {
-            const errorData: ErrorApiResponse = err.response.data;
-            toast.error(errorData.message);
+        if (axios.isAxiosError(err) && err.response) {
+          const errorData: ErrorApiResponse = err.response.data;
+          toast.error(errorData.message);
 
-            // if unauthorized the logout using auth slice, protected route will take to signin page
-            if (errorData.status_code === 401) {
-              dispatch(logout());
-            } else {
-              naviagate("/error");
-            }
+          // if unauthorized the logout using auth slice, protected route will take to signin page
+          if (errorData.status_code === 401) {
+            dispatch(logout());
           } else {
-            console.error("Unexpected error:", err);
             naviagate("/error");
           }
+        } else {
+          console.error("Unexpected error:", err);
+          naviagate("/error");
         }
-      };
-      loadLinks();
-    }
+      }
+    };
+    loadLinks();
   }, [
     currentWorkspace,
     dispatch,
@@ -258,6 +256,10 @@ const LinksPage: React.FC = () => {
 
   const handleLinkCreateModalToggle = () => {
     setIsCreateLinkModalOpen((prev) => !prev);
+  };
+
+  const handleLinkReload = () => {
+    setReload(true);
   };
 
   return (
@@ -344,6 +346,7 @@ const LinksPage: React.FC = () => {
         <CreateLink
           isCreateLinkModalOpen={isCreateLinkModalOpen}
           handleLinkCreateModalToggle={handleLinkCreateModalToggle}
+          handleLinkReload={handleLinkReload}
         />
       )}
     </div>

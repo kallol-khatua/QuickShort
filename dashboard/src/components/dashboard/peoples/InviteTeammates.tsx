@@ -41,6 +41,7 @@ const InviteTeammates: React.FC<{
       toast.success(response.data.message);
     } catch (err: unknown) {
       console.error("Unexpected error:", err);
+      toast.error("Failed to send email")
     } finally {
       handleInviteModalToggle();
       setLoading(false);

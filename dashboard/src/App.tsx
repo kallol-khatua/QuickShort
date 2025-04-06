@@ -16,6 +16,8 @@ import Upgrade from "./pages/Payments/Upgrade";
 import Billing from "./pages/Payments/Billing";
 import People from "./pages/Settings/People";
 import OwnerRoute from "./components/OwnerRoute";
+import AsMember from "./pages/JoinWorkspace/AsMember";
+import AsOwner from "./pages/JoinWorkspace/AsOwner";
 
 function App() {
   return (
@@ -28,14 +30,8 @@ function App() {
           {/* Protected routes */}
           <Route element={<ProtectedRoutePages />}>
             <Route path="/onbording" element=<div>onbording</div> />
-            <Route
-              path="/:workspaceId/join-as-owner"
-              element={<div>owner</div>}
-            />
-            <Route
-              path="/:workspaceId/join-as-member"
-              element={<div>member</div>}
-            />
+            <Route path="/:workspaceId/join-as-owner" element={<AsOwner />} />
+            <Route path="/:workspaceId/join-as-member" element={<AsMember />} />
           </Route>
 
           {/* Dashboard Layout */}

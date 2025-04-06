@@ -13,7 +13,8 @@ import { useNavigate } from "react-router-dom";
 
 const CreateLinkComponent: React.FC<{
   handleLinkCreateModalToggle: () => void;
-}> = ({ handleLinkCreateModalToggle }) => {
+  handleLinkReload: () => void;
+}> = ({ handleLinkCreateModalToggle, handleLinkReload }) => {
   const [url, setUrl] = useState("");
   const [errorData, setErrorData] = useState<string>("");
   const [error, setError] = useState<boolean>(false);
@@ -46,6 +47,7 @@ const CreateLinkComponent: React.FC<{
         }`
       );
 
+      handleLinkReload();
       toast.success("Copied short link to clipboard!");
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {

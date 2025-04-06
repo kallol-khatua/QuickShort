@@ -4,7 +4,8 @@ import CreateLinkComponent from "../../components/dashboard/links/CreateLinkComp
 const CreateLink: React.FC<{
   handleLinkCreateModalToggle: () => void;
   isCreateLinkModalOpen: boolean;
-}> = ({ handleLinkCreateModalToggle, isCreateLinkModalOpen }) => {
+  handleLinkReload: () => void
+}> = ({ handleLinkCreateModalToggle, isCreateLinkModalOpen, handleLinkReload }) => {
   // Disable scrolling when modal is open
   useEffect(() => {
     if (isCreateLinkModalOpen) {
@@ -26,6 +27,7 @@ const CreateLink: React.FC<{
       <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-md z-50">
         <CreateLinkComponent
           handleLinkCreateModalToggle={handleLinkCreateModalToggle}
+          handleLinkReload={handleLinkReload}
         />
       </div>
     </div>
