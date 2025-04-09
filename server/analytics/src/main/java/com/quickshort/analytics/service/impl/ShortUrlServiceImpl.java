@@ -1,5 +1,6 @@
 package com.quickshort.analytics.service.impl;
 
+import com.quickshort.analytics.dto.ClickAnalyticsResponse;
 import com.quickshort.analytics.dto.ShortUrlDto;
 import com.quickshort.analytics.mapper.ShortUrlMapper;
 import com.quickshort.analytics.model.ClickTracking;
@@ -22,9 +23,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class ShortUrlServiceImpl implements ShortUrlService {
@@ -81,7 +84,6 @@ public class ShortUrlServiceImpl implements ShortUrlService {
         return newUrl;
     }
 
-
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
     public ShortUrlDto getOriginalUrl(HttpServletRequest request, String shortCode) {
@@ -136,5 +138,20 @@ public class ShortUrlServiceImpl implements ShortUrlService {
             errors.add(new FieldError("Internal Server Error"));
             throw new InternalServerErrorException("Internal Server Error", "Internal Server Error", errors);
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ClickAnalyticsResponse getReport(UUID workspaceId, LocalDateTime fromDateAndTime, LocalDateTime toDateAndTime) {
+        LOGGER.info("id -> {}", workspaceId);
+        LOGGER.info("from -> {}", fromDateAndTime);
+        LOGGER.info("to -> {}", toDateAndTime);
+
+        return new ClickAnalyticsResponse(
+                clickTrackingRepository.getUrlClickStats(workspaceId, fromDateAndTime, toDateAndTime),
+                clickTrackingRepository.getDeviceStats(workspaceId, fromDateAndTime, toDateAndTime),
+                clickTrackingRepository.getOsStats(workspaceId, fromDateAndTime, toDateAndTime),
+                clickTrackingRepository.getBrowserStats(workspaceId, fromDateAndTime, toDateAndTime)
+        );
     }
 }

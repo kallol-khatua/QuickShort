@@ -18,6 +18,7 @@ import People from "./pages/Settings/People";
 import OwnerRoute from "./components/OwnerRoute";
 import AsMember from "./pages/JoinWorkspace/AsMember";
 import AsOwner from "./pages/JoinWorkspace/AsOwner";
+import Analytics from "./pages/Analytics/Analytics";
 
 function App() {
   return (
@@ -40,7 +41,7 @@ function App() {
             <Route element={<CurrentWorkspacehandler />}>
               <Route index path="/:workspaceId/" element={<LinksPage />} />
               <Route index path="/:workspaceId/upgrade" element={<Upgrade />} />
-              <Route path="/:workspaceId/analytics" element={<Signin />} />
+              <Route path="/:workspaceId/analytics" element={<Analytics />} />
 
               {/* allow only for owner */}
               <Route element={<OwnerRoute />}>
