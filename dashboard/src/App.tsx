@@ -19,6 +19,8 @@ import OwnerRoute from "./components/OwnerRoute";
 import AsMember from "./pages/JoinWorkspace/AsMember";
 import AsOwner from "./pages/JoinWorkspace/AsOwner";
 import Analytics from "./pages/Analytics/Analytics";
+import Onbording from "./pages/Onbording/Onbording";
+import AddLink from "./pages/Onbording/AddLink";
 
 function App() {
   return (
@@ -30,7 +32,9 @@ function App() {
 
           {/* Protected routes */}
           <Route element={<ProtectedRoutePages />}>
-            <Route path="/onbording" element=<div>onbording</div> />
+            <Route path="/onbording" element={<Onbording />} />
+            <Route path="/onbording/link" element={<AddLink />} />
+            <Route path="/user/profile" element=<div>onbording</div> />
             <Route path="/:workspaceId/join-as-owner" element={<AsOwner />} />
             <Route path="/:workspaceId/join-as-member" element={<AsMember />} />
           </Route>

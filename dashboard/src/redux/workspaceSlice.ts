@@ -4,6 +4,13 @@ export interface WorkspaceMember {
     id: string,
     memberType: string, // OWNER / MEMBER
     status: string,
+    userId: {
+        id: string,
+        email: string,
+        profileImageURL: string,
+        role: string,
+        status: string,
+    },
     workspaceId: {
         id: string,
         name: string,

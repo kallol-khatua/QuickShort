@@ -9,7 +9,6 @@ import { RootState } from "../redux/store";
 import { useDispatch, useSelector } from "react-redux";
 import { ChevronDown, Check, ChevronDownIcon } from "lucide-react";
 import { setCurrentWorkspace, WorkspaceMember } from "../redux/workspaceSlice";
-import CreateWorkspace from "./CreateWorkspace";
 
 type NavItem = {
   name: string;
@@ -43,13 +42,14 @@ const ownerOptions: NavItem[] = [
   },
 ];
 
-const WorkspacesDropdown = () => {
+const WorkspacesDropdown: React.FC<{
+  isOpen: boolean;
+  handleWorkspaceDropdownToogle: () => void;
+  handleWorksapceCreateModalToggle: () => void;
+}> = ({ isOpen, handleWorkspaceDropdownToogle, handleWorksapceCreateModalToggle }) => {
   const { workspaceId } = useParams();
-  const [isOpen, setIsOpen] = useState<boolean>(false);
+  // const [isOpen, setIsOpen] = useState<boolean>(false);
   const dispatch = useDispatch();
-  //   name: "kallol",
-  //   free: true,
-  // });
   const navigate = useNavigate();
   const location = useLocation();
   const currentWorkspace = useSelector(
@@ -59,8 +59,8 @@ const WorkspacesDropdown = () => {
   const workspaces = useSelector(
     (state: RootState) => state.workspace.workspaces
   );
-  const [isCreateWorkspaceModalOpen, setIsCreateWorkspaceModalOpen] =
-    useState<boolean>(false);
+  // const [isCreateWorkspaceModalOpen, setIsCreateWorkspaceModalOpen] =
+  //   useState<boolean>(false);
 
   // console.log(currentWorkspace);
 
@@ -72,7 +72,8 @@ const WorkspacesDropdown = () => {
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target as Node)
       ) {
-        setIsOpen(false);
+        // setIsOpen(false);
+        handleWorkspaceDropdownToogle();
       }
     };
 
@@ -83,12 +84,13 @@ const WorkspacesDropdown = () => {
     }
 
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
+  }, [handleWorkspaceDropdownToogle, isOpen]);
 
   // Function to handle worksapce change by the user
   const handleWorksapceChange = (workspace: WorkspaceMember) => {
     dispatch(setCurrentWorkspace(workspace));
-    setIsOpen(false);
+    // setIsOpen(false);
+    handleWorkspaceDropdownToogle();
     if (workspaceId) {
       // Replace the ID only
       const newPath = location.pathname.replace(
@@ -99,17 +101,12 @@ const WorkspacesDropdown = () => {
     }
   };
 
-  const handleWorksapceCreateModalToggle = () => {
-    setIsCreateWorkspaceModalOpen((prev) => !prev);
-    setIsOpen(false);
-  };
-
   return (
     <div className="relative mb-2" ref={dropdownRef}>
       {/* Selected Workspace Button */}
       <button
         className="flex items-center justify-between gap-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 w-full overflow-hidden dark:bg-white/2 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-300"
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => handleWorkspaceDropdownToogle()}
       >
         <div className="flex items-center gap-2 w-full overflow-hidden">
           {/* Workspace Icon */}
@@ -187,18 +184,15 @@ const WorkspacesDropdown = () => {
           </button>
         </div>
       )}
-
-      {isCreateWorkspaceModalOpen && (
-        <CreateWorkspace
-          handleWorksapceCreateModalToggle={handleWorksapceCreateModalToggle}
-          isCreateWorkspaceModalOpen={isCreateWorkspaceModalOpen}
-        />
-      )}
     </div>
   );
 };
 
-const AppSidebar: React.FC = () => {
+const AppSidebar: React.FC<{
+  isOpen: boolean;
+  handleWorkspaceDropdownToogle: () => void;
+  handleWorksapceCreateModalToggle: () => void;
+}> = ({ isOpen, handleWorkspaceDropdownToogle, handleWorksapceCreateModalToggle }) => {
   const currentWorkspace = useSelector(
     (state: RootState) => state.workspace.currentWorkspace
   );
@@ -214,15 +208,6 @@ const AppSidebar: React.FC = () => {
     {}
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
-  // const [openSubmenu, setOpenSubmenu] = useState<{
-  //   type: "general" | "owner";
-  //   index: number;
-  // } | null>(null);
-  // const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
-  //   {}
-  // );
-  // const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const isActive = useCallback(
     (path: string) => location.pathname === path,
@@ -459,7 +444,15 @@ const AppSidebar: React.FC = () => {
       ) : (
         <div className="flex flex-col gap-10 h-max">
           <div>
-            {(isExpanded || isMobileOpen) && <WorkspacesDropdown />}
+            {(isExpanded || isMobileOpen) && (
+              <WorkspacesDropdown
+                isOpen={isOpen}
+                handleWorkspaceDropdownToogle={handleWorkspaceDropdownToogle}
+                handleWorksapceCreateModalToggle={
+                  handleWorksapceCreateModalToggle
+                }
+              />
+            )}
 
             <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
               <nav className="mb-6">
