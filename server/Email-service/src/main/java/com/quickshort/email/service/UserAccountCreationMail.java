@@ -6,13 +6,17 @@ import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.io.UnsupportedEncodingException;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.Year;
+import java.util.UUID;
 
 @Service
 public class UserAccountCreationMail {
@@ -20,10 +24,13 @@ public class UserAccountCreationMail {
     @Autowired
     private JavaMailSender javaMailSender;
 
+    @Value("${spring.add.baseurl}")
+    private String baseUrl;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(UserAccountCreationMail.class);
 
     @Async
-    public void sendEmail(String to, String subject, String body) throws MessagingException, UnsupportedEncodingException {
+    public void sendEmail(String to, String subject, UUID id) throws MessagingException, IOException {
         LOGGER.info(String.format("Sending account creation mail to -> %s", to));
 
 //        SimpleMailMessage message = new SimpleMailMessage();
@@ -35,13 +42,22 @@ public class UserAccountCreationMail {
         MimeMessage mimeMessage = javaMailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
+        String htmlContent = new String(
+                new ClassPathResource("templates/verify-email.html").getInputStream().readAllBytes(),
+                StandardCharsets.UTF_8
+        );
+
+        htmlContent = htmlContent
+                .replace("${verificationLink}", baseUrl + "/verify-account?id=" + id)
+                .replace("${year}", String.valueOf(Year.now().getValue()));
+
         helper.setTo(to);
         helper.setSubject(subject);
-        helper.setText(body, true);
+        helper.setText(htmlContent, true);
 
         // Set a visible sender email
-        helper.setFrom(new InternetAddress("kallol.k@rideassure.in", "QuickShort"));
-        helper.setReplyTo("kallol.k@rideassure.in");
+        helper.setFrom(new InternetAddress("service@rideassure.in", "QuickShort"));
+        helper.setReplyTo("service@rideassure.in");
 
         try {
 //            javaMailSender.send(message);

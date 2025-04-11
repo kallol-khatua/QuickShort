@@ -21,6 +21,8 @@ import AsOwner from "./pages/JoinWorkspace/AsOwner";
 import Analytics from "./pages/Analytics/Analytics";
 import Onbording from "./pages/Onbording/Onbording";
 import AddLink from "./pages/Onbording/AddLink";
+import Signup from "./pages/AuthPages/Signup";
+import VerifyAccount from "./pages/AuthPages/VerifyAccount";
 
 function App() {
   return (
@@ -29,6 +31,11 @@ function App() {
         <ScrollToTop />
         <Routes>
           <Route path="/error" element={<div>error page</div>} />
+
+          {/* Auth Layout */}
+          <Route path="/signin" element={<Signin />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/verify-account" element={<VerifyAccount />} />
 
           {/* Protected routes */}
           <Route element={<ProtectedRoutePages />}>
@@ -61,10 +68,6 @@ function App() {
               </Route>
             </Route>
           </Route>
-
-          {/* Auth Layout */}
-          <Route path="/signin" element={<Signin />} />
-          <Route path="/signup" element={<Home />} />
 
           {/* Fallback Route */}
           {/* <Route path="*" element={<NotFound />} /> */}

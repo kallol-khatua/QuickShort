@@ -42,6 +42,9 @@ public class User implements Serializable {
     @Enumerated(EnumType.STRING)
     private UserAccountStatus status;
 
+    @Column(name = "profile_image_url")
+    private String profileImageURL;
+
     @Column(name = "is_account_non_expired", nullable = false)
     private boolean isAccountNonExpired;
 

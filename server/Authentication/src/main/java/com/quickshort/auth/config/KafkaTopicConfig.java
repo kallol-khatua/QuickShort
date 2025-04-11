@@ -12,4 +12,8 @@ public class KafkaTopicConfig {
     public NewTopic userAccountCreationTopic() {
         return TopicBuilder.name("user-account-creation").build();
     }
+    @Bean
+    public NewTopic userAccountVerificationTopic() {
+        return TopicBuilder.name("user-account-verified").build();
+    }
 }

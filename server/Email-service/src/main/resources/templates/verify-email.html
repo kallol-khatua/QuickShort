@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Verify Your Account</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          background-color: #f4f4f7;
+          padding: 20px;
+          color: #333;
+        }
+        .container {
+          max-width: 600px;
+          margin: 0 auto;
+          background-color: #ffffff;
+          border-radius: 8px;
+          padding: 30px;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .button {
+          display: inline-block;
+          margin-top: 20px;
+          padding: 12px 25px;
+          background-color: #4f46e5;
+          color: #ffffff !important;
+          text-decoration: none;
+          border-radius: 6px;
+          font-weight: bold;
+        }
+        .footer {
+          margin-top: 30px;
+          font-size: 12px;
+          color: #999;
+          text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Verify Your Account</h2>
+    <p>Thank you for signing up! Please click the button below to verify your email address and activate your
+        account.</p>
+    <a href="${verificationLink}" class="button">Verify Account</a>
+    <p>If you didn’t create an account, you can safely ignore this email.</p>
+    <div class="footer">
+        &copy; ${year} QuickShort. All rights reserved.
+    </div>
+</div>
+</body>
+</html>

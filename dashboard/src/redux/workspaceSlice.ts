@@ -7,6 +7,8 @@ export interface WorkspaceMember {
     userId: {
         id: string,
         email: string,
+        firstName: string,
+        lastName: string,
         profileImageURL: string,
         role: string,
         status: string,

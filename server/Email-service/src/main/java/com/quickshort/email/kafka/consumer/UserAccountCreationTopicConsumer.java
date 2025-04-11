@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class UserAccountCreationTopicConsumer {
     @Autowired
@@ -20,10 +22,13 @@ public class UserAccountCreationTopicConsumer {
         try {
             LOGGER.info("Message received in email service -> {}", event);
 
+            UUID id = event.getUserPayload().getId();
+            String email = event.getUserPayload().getEmail();
+
             userAccountCreationMail.sendEmail(
-                    event.getUserPayload().getEmail(),
-                    "Email from spring boot - account created",
-                    event.toString()
+                    email,
+                    "Verify your email",
+                    id
             );
         } catch (Exception e) {
             LOGGER.error("Error processing message: {}", e.getMessage(), e);
