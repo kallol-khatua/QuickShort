@@ -24,7 +24,7 @@ const HomePage = () => {
         </p>
 
         <a
-          href="http://dashboard.quickshort.com"
+          href={`${import.meta.env.VITE_DASHBOARD_BASE_URL}`}
           target="_blank"
           rel="noopener noreferrer"
         >
