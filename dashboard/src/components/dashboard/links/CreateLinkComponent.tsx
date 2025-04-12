@@ -25,6 +25,39 @@ const CreateLinkComponent: React.FC<{
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const handleCopyToClipboard = async (link: string) => {
+    if (!link) {
+      toast.error("Invalid link.");
+      return;
+    }
+
+    // await navigator.clipboard.writeText(link);
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(link);
+        toast.success("Copied short link to clipboard!");
+      } catch (err) {
+        console.error("Clipboard copy failed", err);
+        toast.error("Failed to copy the link.");
+      }
+    } else {
+      // Fallback: use a hidden input
+      try {
+        const input = document.createElement("input");
+        input.value = link;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+        toast.success("Copied short link to clipboard!");
+      } catch (err) {
+        console.error("Fallback copy failed", err);
+        toast.error("Failed to copy the link.");
+      }
+    }
+  };
+
   const handleCreateUrl = async () => {
     if (!url) {
       setErrorData("Enter a valid URL");
@@ -41,14 +74,13 @@ const CreateLinkComponent: React.FC<{
       );
 
       handleLinkCreateModalToggle();
-      await navigator.clipboard.writeText(
+      handleLinkReload();
+
+      handleCopyToClipboard(
         `${import.meta.env.VITE_URL_TRACKING_BASE_URL}/${
           response.data.data.shortCode
         }`
       );
-
-      handleLinkReload();
-      toast.success("Copied short link to clipboard!");
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response) {
         const errorData: ErrorApiResponse = err.response.data;

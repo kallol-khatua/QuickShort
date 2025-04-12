@@ -33,8 +33,42 @@ const AddLink: React.FC = () => {
     setError(false);
   };
 
+  // Function to copy the link to the clicpboard
+  const handleCopyToClipboard = async (link: string) => {
+    if (!link) {
+      toast.error("Invalid link.");
+      return;
+    }
+
+    // await navigator.clipboard.writeText(link);
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(link);
+        toast.success("Copied short link to clipboard!");
+      } catch (err) {
+        console.error("Clipboard copy failed", err);
+        toast.error("Failed to copy the link.");
+      }
+    } else {
+      // Fallback: use a hidden input
+      try {
+        const input = document.createElement("input");
+        input.value = link;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+        toast.success("Copied short link to clipboard!");
+      } catch (err) {
+        console.error("Fallback copy failed", err);
+        toast.error("Failed to copy the link.");
+      }
+    }
+  };
+
   // crate workspace
-  const handleCreateWorkspace = async () => {
+  const handleCreateLink = async () => {
     if (!url) {
       setErrorData("Enter a valid URL");
       setError(true);
@@ -46,12 +80,18 @@ const AddLink: React.FC = () => {
     if (!workspace) return;
 
     try {
-      await axiosWorkspaceInstance.post(`/${workspace}/shorten-url`, {
-        originalUrl: url,
-      });
+      const response = await axiosWorkspaceInstance.post(
+        `/${workspace}/shorten-url`,
+        {
+          originalUrl: url,
+        }
+      );
 
-      toast.success("Copied short link to clipboard!");
-
+      handleCopyToClipboard(
+        `${import.meta.env.VITE_URL_TRACKING_BASE_URL}/${
+          response.data.data.shortCode
+        }`
+      );
       // send to create link for newly created workspace
       handleGoToNextStep();
       //   navigate(`/${workspace}`);
@@ -105,7 +145,7 @@ const AddLink: React.FC = () => {
             <div className="flex flex-col w-full">
               <button
                 className="px-4 py-2 bg-gray-700 dark:bg-white/[0.7] text-white dark:text-black rounded-md hover:bg-black dark:hover:bg-white transition w-full"
-                onClick={handleCreateWorkspace}
+                onClick={handleCreateLink}
               >
                 Create link
               </button>

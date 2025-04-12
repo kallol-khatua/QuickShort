@@ -63,13 +63,38 @@ const ListLinks: React.FC<{
   size,
   handleNumberChange,
 }) => {
-  const handleLinkCopy = async (link: string) => {
-    toast.success("Copied short link to clipboard!");
-    console.log(`${import.meta.env.VITE_URL_TRACKING_BASE_URL}/${link}`)
-    
-    await navigator.clipboard.writeText(
-      `${import.meta.env.VITE_URL_TRACKING_BASE_URL}/${link}`
-    );
+  const handleLinkCopy = async (shortCode: string) => {
+    if (!shortCode) {
+      toast.error("Invalid link.");
+      return;
+    }
+
+    // await navigator.clipboard.writeText(link);
+    const link = `${import.meta.env.VITE_URL_TRACKING_BASE_URL}/${shortCode}`;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(link);
+        toast.success("Copied short link to clipboard!");
+      } catch (err) {
+        console.error("Clipboard copy failed", err);
+        toast.error("Failed to copy the link.");
+      }
+    } else {
+      // Fallback: use a hidden input
+      try {
+        const input = document.createElement("input");
+        input.value = link;
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+        toast.success("Copied short link to clipboard!");
+      } catch (err) {
+        console.error("Fallback copy failed", err);
+        toast.error("Failed to copy the link.");
+      }
+    }
   };
 
   return (

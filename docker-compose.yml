@@ -21,8 +21,6 @@ services:
     # if container name not provided then it will create automatically otherwise use this name
     container_name: quickshort-dashboard
     restart: unless-stopped
-    environment:
-      - VITE_URL_TRACKING_BASE_URL=http://quickshort.com
 
   frontend:
     build:
