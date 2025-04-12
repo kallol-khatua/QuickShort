@@ -1,6 +1,6 @@
 import toast from "react-hot-toast";
 import axiosWorkspaceInstance from "../../axiosWorkspaceInstance";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import axios from "axios";
 import { ErrorApiResponse } from "../../helper/ErrorApiResponse";
 import { useDispatch } from "react-redux";

@@ -65,10 +65,13 @@ const ListLinks: React.FC<{
 }) => {
   const handleLinkCopy = async (link: string) => {
     toast.success("Copied short link to clipboard!");
+    console.log(`${import.meta.env.VITE_URL_TRACKING_BASE_URL}/${link}`)
+    
     await navigator.clipboard.writeText(
       `${import.meta.env.VITE_URL_TRACKING_BASE_URL}/${link}`
     );
   };
+
   return (
     <>
       <div className="dark:bg-gray-900 rounded-lg">

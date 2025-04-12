@@ -14,7 +14,8 @@ public class ApplicationConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:5174", "http://localhost:4173"));
+//                                                      vite live               vite preview                serve
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5100", "http://localhost:4100", "http://localhost:3000", "http://dashboard.quickshort.com"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "DELETE", "PUT", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
