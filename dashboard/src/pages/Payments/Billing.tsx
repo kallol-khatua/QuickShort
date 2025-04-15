@@ -11,6 +11,8 @@ import axios from "axios";
 import { logout } from "../../redux/authSlice";
 import RotatingLoader from "../../components/ui/loader/RotatingLoader";
 import { Navigate } from "react-router-dom";
+import { setCurrentWorkspace, setIsLoaded } from "../../redux/workspaceSlice";
+import ChoosePlanModal from "./ChoosePlanModal";
 
 type Data = {
   amount: number;
@@ -40,20 +42,17 @@ interface AllOrders extends SuccessApiResponse {
 }
 
 // List all orders
-const ListInvitations: React.FC<{
+const ListOrders: React.FC<{
   allOrders: Data[];
   handleReload: () => void;
-}> = ({ allOrders, handleReload }) => {
+  handlePayNow: () => void;
+}> = ({ allOrders, handleReload, handlePayNow }) => {
   const dispatch = useDispatch();
 
   // calcel order when satus = awaiting payment
   const handleCancelOrder = async (order: Data) => {
-    // console.log(order);
-    // console.log(order.id);
-
     try {
-      const response = await axiosOrderInstance.post(`/${order.id}/cancel`);
-      console.log(response);
+      await axiosOrderInstance.post(`/${order.id}/cancel`);
 
       toast.success("Order cancelled successfully!");
       handleReload();
@@ -83,21 +82,17 @@ const ListInvitations: React.FC<{
             className="border bg-white dark:border-gray-700 dark:bg-gray-800 rounded-lg p-4 mb-3"
           >
             <div className="sm:flex sm:justify-between sm:items-center">
-              {/* title */}
               <div className="flex items-center space-x-2">
-                <div>
-                  {/* <Avatar src={invitation.userId.profileImageURL} size="medium" /> */}
-                </div>
-
                 <div className="flex flex-col">
                   <div className="font-semibold dark:text-white">
-                    {order.orderStatus}
+                    Status: {order.orderStatus}
                   </div>
-                  {order.amount}
                   <p className="text-gray-500 dark:text-gray-400 text-sm truncate max-w-[250px] sm:max-w-[350px] md:max-w-[550px] overflow-hidden">
-                    {order.id}
+                    Amount: {order.amount}
                   </p>
-                  {order.workspaceId}
+                  <p className="text-gray-500 dark:text-gray-400 text-sm truncate max-w-[250px] sm:max-w-[350px] md:max-w-[550px] overflow-hidden">
+                    Order Id: {order.id}
+                  </p>
                 </div>
               </div>
 
@@ -106,6 +101,7 @@ const ListInvitations: React.FC<{
                 <div className="flex items-center justify-center gap-5 mt-2 sm:mt-0">
                   <button
                     className={`inline-flex items-center justify-center gap-2 rounded-lg transition font-medium px-4 py-3 text-sm bg-success-500 text-white dark:text-white shadow-theme-xs hover:bg-success-600`}
+                    onClick={handlePayNow}
                     // onClick={() => handleVerifyInvitation(invitation)}
                   >
                     Pay now
@@ -119,6 +115,21 @@ const ListInvitations: React.FC<{
                 </div>
               )}
             </div>
+
+            {/* Action buttons */}
+            {order.orderStatus === "COMPLETED" && (
+              <div>
+                <p className="text-gray-500 dark:text-gray-400 text-sm truncate max-w-[250px] sm:max-w-[350px] md:max-w-[550px] overflow-hidden">
+                  Plan start date: {order.planStartDate}
+                </p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm truncate max-w-[250px] sm:max-w-[350px] md:max-w-[550px] overflow-hidden">
+                  Plan end date: {order.planEndDate}
+                </p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm truncate max-w-[250px] sm:max-w-[350px] md:max-w-[550px] overflow-hidden">
+                  Paid at: {order.paidAt}
+                </p>
+              </div>
+            )}
 
             {/* triple dot icon */}
           </div>
@@ -137,8 +148,10 @@ const Billing = () => {
   const [nextPlan, setNextPlan] = useState<Plan>();
   const [nextPlanId, setnextPlanId] = useState<string>("");
   const [allOrders, setAllorders] = useState<Data[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [reload, setReload] = useState<boolean>(false);
+  const [isChoosePlanModalOpen, setIsChoosePlanModalOpen] =
+    useState<boolean>(false);
 
   const getDate = (data: string): string => {
     const date = new Date(data);
@@ -168,7 +181,7 @@ const Billing = () => {
         setAllorders(response.data.data);
         setReload(false);
         setTimeout(() => {
-          setIsLoaded(true);
+          setIsDataLoaded(true);
         }, 250);
       } catch (err: unknown) {
         if (axios.isAxiosError(err) && err.response) {
@@ -202,7 +215,9 @@ const Billing = () => {
 
   useEffect(() => {
     const plan = currPlans.filter((plan) => plan.id === nextPlanId)[0];
-    setNextPlan(plan);
+    if (plan) {
+      setNextPlan(plan);
+    }
   }, [currPlans, nextPlanId]);
 
   // match plans with current workspace type
@@ -264,26 +279,27 @@ const Billing = () => {
         description: "Subscription Payment",
         // handle payment verification
         handler: async function (response: RazorpaySuccessResponse) {
-          //   console.log(response.razorpay_order_id);
-          //   console.log(response.razorpay_payment_id);
-          //   console.log(response.razorpay_signature);
-
           // send request to backend for payment verification
-          // await axiosOrderInstance.post<OrderData>(
-          //   `/verify-payment?paymentId=${response.razorpay_payment_id}&orderId=${response.razorpay_order_id}&signature=${response.razorpay_signature}`
-          // );
+          try {
+            await axiosOrderInstance.post<OrderData>(
+              `/verify-payment/repay?paymentId=${response.razorpay_payment_id}&orderId=${response.razorpay_order_id}&signature=${response.razorpay_signature}`
+            );
 
-          console.log(response);
+            // after verify reload orders
+            toast.success("Payment successfull");
 
-          // reload all workspace
-          // dispatch(setIsLoaded(false));
+            setTimeout(() => {
+              // reload all workspace
+              dispatch(setIsLoaded(false));
 
-          // set current to null so it will automatically match current workspace with recently creatd one
-          // dispatch(setCurrentWorkspace(null));
+              // set current to null so it will automatically match current workspace with recently updated data
+              dispatch(setCurrentWorkspace(null));
 
-          // after verify send to billing page
-          toast.success("Subscription added");
-          // navigate(`/${currentWorkspace?.workspaceId.id}/settings/billing`);
+              handleReload();
+            }, 250);
+          } catch (error) {
+            console.log("Error while verifying payment", error);
+          }
         },
         theme: {
           color: "#3399cc",
@@ -295,7 +311,13 @@ const Billing = () => {
     }
   };
 
-  // console.log(nextPlan);
+  const handleChooseAnotherPlan = () => {
+    setIsChoosePlanModalOpen((prev) => !prev);
+  };
+
+  const handlesetNextPlanId = (id: string) => {
+    setnextPlanId(id);
+  };
 
   return (
     <div className="min-h-full flex flex-col">
@@ -311,42 +333,41 @@ const Billing = () => {
               </span>
             </div>
 
-            {nextPlan && (
-              <select
-                title="size"
-                value={nextPlan?.id}
-                onChange={(e) => setnextPlanId(e.target.value)}
-                className="border rounded-lg px-4 py-1.5 appearance-none text-gray-700 dark:text-gray-300 dark:bg-gray-800 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+            <div className="flex gap-3">
+              {isChoosePlanModalOpen && nextPlan && (
+                <ChoosePlanModal
+                  handleChooseAnotherPlan={handleChooseAnotherPlan}
+                  nextPlan={nextPlan}
+                  handlesetNextPlanId={handlesetNextPlanId}
+                  currPlans={currPlans}
+                />
+              )}
+
+              <button
+                className="flex items-center justify-center p-3 font-medium text-white rounded-lg bg-gray-900 text-theme-sm hover:bg-gray-800 dark:bg-white dark:text-black dark:bg-gray-300"
+                onClick={handleChooseAnotherPlan}
               >
-                {currPlans.map((plan) => (
-                  <option key={plan.id} value={plan.id}>
-                    {plan.planDuration} {plan.amount} {plan.amountPerMonth}
-                  </option>
-                ))}
-              </select>
-            )}
+                Choose next plan
+              </button>
 
-            {/* {currPlans.map((plan) => (
-              <div>
-                <div>{plan.planDuration}</div>
-                <div>{plan.amount}</div>
-                <div>{plan.percentageOff}</div>
-              </div>
-            ))} */}
-
-            <button
-              className="flex items-center justify-center p-3 font-medium text-white rounded-lg bg-gray-900 text-theme-sm hover:bg-gray-800 dark:bg-white dark:text-black dark:bg-gray-300"
-              onClick={handlePayNow}
-            >
-              Pay now
-            </button>
+              <button
+                className="flex items-center justify-center p-3 font-medium text-white rounded-lg bg-gray-900 text-theme-sm hover:bg-gray-800 dark:bg-white dark:text-black dark:bg-gray-300"
+                onClick={handlePayNow}
+              >
+                Pay now
+              </button>
+            </div>
           </div>
         ) : (
           <Navigate to={`/${currentWorkspace.workspaceId.id}/upgrade`} />
         )}
 
-        {isLoaded ? (
-          <ListInvitations allOrders={allOrders} handleReload={handleReload} />
+        {isDataLoaded ? (
+          <ListOrders
+            allOrders={allOrders}
+            handleReload={handleReload}
+            handlePayNow={handlePayNow}
+          />
         ) : (
           <div className="flex-1 min-h-0 flex justify-center items-center w-full">
             <div className="w-full">

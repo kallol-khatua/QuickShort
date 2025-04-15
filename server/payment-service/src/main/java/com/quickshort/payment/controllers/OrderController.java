@@ -132,4 +132,26 @@ public class OrderController {
         // Return the response with 201 Created status
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @PostMapping({"/verify-payment/repay/", "/verify-payment/repay"})
+    public ResponseEntity<SuccessApiResponse<OrderDto>> verifyRepayPayment(
+            @RequestParam(required = false) String paymentId,
+            @RequestParam(required = false) String orderId,
+            @RequestParam(required = false) String signature
+    ) {
+        // paymentId, orderId, signature
+        OrderDto orderDto = orderService.verifyRepayPayment(paymentId, orderId, signature);
+
+        // Set up response
+        SuccessApiResponse<OrderDto> response = new SuccessApiResponse<>();
+        response.setStatus_code(HttpStatus.OK.value());
+        response.setStatus_text(HttpStatus.OK.name());
+        response.setSuccess(true);
+        response.setStatus("Order Verified");
+        response.setMessage("Order status verified");
+        response.setData(orderDto);
+
+        // Return the response with status
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 }

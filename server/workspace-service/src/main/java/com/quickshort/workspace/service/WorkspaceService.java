@@ -11,4 +11,6 @@ public interface WorkspaceService {
     WorkspaceDto createWorkspace(WorkspaceDto workspaceDto);
 
     Workspace workspaceTypeUpgrade(WorkspacePayload payload);
+
+    Workspace workspaceUpdate(WorkspacePayload payload);
 }

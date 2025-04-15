@@ -222,4 +222,30 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     }
 
 
+    // Function to update workspace details when user repay
+    @Transactional
+    @Override
+    public Workspace workspaceUpdate(WorkspacePayload payload) {
+        try {
+            Optional<Workspace> existingWorkspace = workspaceRepository.findById(payload.getId());
+            if (existingWorkspace.isEmpty()) {
+                throw new Exception("Workspace not found");
+            }
+
+            Workspace workspace = existingWorkspace.get();
+            workspace.setNextBillingDate(payload.getNextBillingDate());
+
+            if (workspace.getWorkspaceStatus() != WorkspaceStatus.ACTIVE) {
+                workspace.setWorkspaceStatus(WorkspaceStatus.ACTIVE);
+                workspace.setLastResetDate(payload.getLastResetDate());
+                workspace.setNextResetDate(payload.getNextResetDate());
+                workspace.setCreatedLinksThisMonth(0);
+            }
+
+            return workspaceRepository.save(workspace);
+        } catch (Exception e) {
+            LOGGER.error("Error processing workspaceTypeUpgradation message: {}", e.getMessage(), e);
+            return null;
+        }
+    }
 }

@@ -19,8 +19,8 @@ public class ApplicationConfig {
                 "http://localhost:4100",
                 "http://localhost:3000",
                 "http://dashboard.quickshort.com",
-                "http://3.110.135.243",
-                "http://3.110.135.243:3000",
+                "http://13.234.38.102",
+                "http://13.234.38.102:3000",
                 "http://dashboard.rideassure.in"
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "DELETE", "PUT", "PATCH"));

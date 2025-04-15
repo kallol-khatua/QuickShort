@@ -10,6 +10,8 @@ public interface OrderService {
 
     OrderDto verifyPayment(String paymentId, String orderId, String signature);
 
+    OrderDto verifyRepayPayment(String paymentId, String orderId, String signature);
+
     List<OrderDto> getAllOrders(UUID workspaceId);
 
     OrderDto createRepayOrder(OrderDto orderDto);
